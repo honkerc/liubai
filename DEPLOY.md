@@ -1,13 +1,13 @@
 # 留白 部署说明
 
-个人博客 **留白**（FastAPI + Vue 3）。生产环境推荐 **Nginx + systemd**，默认安装目录 **`/www/blog`**。
+个人博客 **留白**（FastAPI + Vue 3）。生产环境推荐 **Nginx + systemd**，默认安装目录 **`/www/liubai`**。
 
 ## 架构
 
 ```
 用户 → Nginx (:80 / :443)
-         ├─ /              → /www/blog/dist（SPA）
-         ├─ /uploads/      → /www/uploads/
+         ├─ /              → /www/liubai/dist（SPA）
+         ├─ /uploads/      → /www/liubai/uploads/
          └─ /api/          → 127.0.0.1:8000
 
 systemd: blog.service → uvicorn（SERVE_STATIC=false）
@@ -15,10 +15,10 @@ systemd: blog.service → uvicorn（SERVE_STATIC=false）
 
 | 路径 | 用途 |
 |------|------|
-| `/www/blog` | 项目代码、`.venv`、`dist/` |
-| `/www/blog/backend` | FastAPI 工作目录 |
-| `/www/uploads/` | 上传文件 |
-| `/www/db.sqlite3` | SQLite 数据库 |
+| `/www/liubai` | 项目代码、`.venv`、`dist/` |
+| `/www/liubai/backend` | FastAPI 工作目录 |
+| `/www/liubai/uploads/` | 上传文件 |
+| `/www/liubai/db.sqlite3` | SQLite 数据库 |
 | `/etc/blog/env` | 后端环境变量 |
 
 ## 一键部署
@@ -38,8 +38,8 @@ sudo certbot --nginx -d blog.example.com   # 可选 HTTPS
 
 ```bash
 ./scripts/build-release.sh
-sudo mkdir -p /www/blog /www/uploads /www/blog/dist
-# rsync 代码到 /www/blog，安装 venv 与依赖
+sudo mkdir -p /www/liubai /www/liubai/uploads /www/liubai/dist
+# rsync 代码到 /www/liubai，安装 venv 与依赖
 sudo cp deploy/env.example /etc/blog/env
 sudo cp deploy/blog.service /etc/systemd/system/
 sudo cp deploy/nginx.conf /etc/nginx/sites-available/blog
@@ -55,7 +55,7 @@ journalctl -u blog -f
 curl http://127.0.0.1:8000/api/health
 ```
 
-更新：在 `/www/blog` 拉代码后重新执行 `deploy-nginx.sh`。
+更新：在 `/www/liubai` 拉代码后重新执行 `deploy-nginx.sh`。
 
 ## Docker（可选）
 
@@ -72,7 +72,7 @@ python start.py
 
 ## 环境变量
 
-见 `deploy/env.example`。Nginx 部署时 `DATA_DIR=/www`（库在 `/www/db.sqlite3`，上传在 `/www/uploads/`），`SERVE_STATIC=false`。
+见 `deploy/env.example`。Nginx 部署时 `DATA_DIR=/www/liubai`（库在 `/www/liubai/db.sqlite3`，上传在 `/www/liubai/uploads/`），`SERVE_STATIC=false`。
 
 ## 上线检查
 

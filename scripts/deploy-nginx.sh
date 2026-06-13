@@ -4,9 +4,9 @@
 set -euo pipefail
 
 DOMAIN="${DOMAIN:-your-domain.com}"
-INSTALL_ROOT="${INSTALL_ROOT:-/www/blog}"
-DATA_DIR="${DATA_DIR:-/www}"
-UPLOAD_DIR="${UPLOAD_DIR:-/www/uploads}"
+INSTALL_ROOT="${INSTALL_ROOT:-/www/liubai}"
+DATA_DIR="${DATA_DIR:-/www/liubai}"
+UPLOAD_DIR="${UPLOAD_DIR:-/www/liubai/uploads}"
 ENV_FILE="${ENV_FILE:-/etc/blog/env}"
 SERVICE_USER="${SERVICE_USER:-www-data}"
 
@@ -55,8 +55,8 @@ fi
 sed "s|your-domain.com|$DOMAIN|g" "$INSTALL_ROOT/deploy/blog.service" \
     > /etc/systemd/system/blog.service
 
-if [[ "$INSTALL_ROOT" != "/www/blog" ]]; then
-    sed -i "s|/www/blog|$INSTALL_ROOT|g" /etc/systemd/system/blog.service
+if [[ "$INSTALL_ROOT" != "/www/liubai" ]]; then
+    sed -i "s|/www/liubai|$INSTALL_ROOT|g" /etc/systemd/system/blog.service
 fi
 
 systemctl daemon-reload
@@ -67,9 +67,9 @@ echo "==> [6/6] 配置 Nginx"
 NGINX_SITE="/etc/nginx/sites-available/blog"
 sed "s|your-domain.com|$DOMAIN|g" "$INSTALL_ROOT/deploy/nginx.conf" > "$NGINX_SITE"
 
-if [[ "$INSTALL_ROOT" != "/www/blog" ]] || [[ "$UPLOAD_DIR" != "/www/uploads" ]]; then
-    sed -i "s|/www/blog/dist|$DIST|g" "$NGINX_SITE"
-    sed -i "s|/www/uploads/|$UPLOAD_DIR/|g" "$NGINX_SITE"
+if [[ "$INSTALL_ROOT" != "/www/liubai" ]] || [[ "$UPLOAD_DIR" != "/www/liubai/uploads" ]]; then
+    sed -i "s|/www/liubai/dist|$DIST|g" "$NGINX_SITE"
+    sed -i "s|/www/liubai/uploads/|$UPLOAD_DIR/|g" "$NGINX_SITE"
 fi
 
 ln -sf "$NGINX_SITE" /etc/nginx/sites-enabled/blog
