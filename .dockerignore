@@ -1,0 +1,17 @@
+node_modules
+dist
+npm-debug.log
+.env
+.env.local
+.env.*.local
+.git
+.gitignore
+logs
+data
+backend/db.sqlite3
+backend/uploads
+backend/__pycache__
+backend/.env
+minimal-backend
+minimal-frontend
+**/.DS_Store

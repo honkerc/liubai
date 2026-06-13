@@ -1,0 +1,103 @@
+/* ====== 主题变量 ====== */
+:root {
+    --primary: #4f6ef7;
+    --primary-light: #eef1ff;
+    --primary-hover: #3b5de7;
+    --primary-bg: #e4ebf5;
+    --text-primary: #202124;
+    --text-secondary: #5f6368;
+    --text-tertiary: #9aa0a6;
+    --border-color: #e8eaed;
+    --border-subtle: rgba(31, 35, 41, 0.06);
+    --border-card: rgba(31, 35, 41, 0.08);
+    --bg-hover: #f8f9fa;
+    --bg-card: #f8f9fa;
+    /* 比卡片白底略深，拉开层次（飞书靠背景对比 + 阴影，不单靠阴影） */
+    --bg-body: #e4ebf5;
+    --bg-white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(31, 35, 41, 0.06), 0 1px 3px rgba(31, 35, 41, 0.04);
+    --shadow-md: 0 4px 16px rgba(31, 35, 41, 0.08), 0 1px 4px rgba(31, 35, 41, 0.04);
+    /* 面板浮起：描边 + 多层阴影（飞书质感核心） */
+    --shadow-card:
+        0 0 0 1px rgba(31, 35, 41, 0.06),
+        0 1px 2px rgba(31, 35, 41, 0.04),
+        0 4px 12px rgba(31, 35, 41, 0.06),
+        0 12px 28px rgba(31, 35, 41, 0.05);
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 20px;
+    --highlight-bg: #f8f9fa;
+    --overlay-bg: rgba(0, 0, 0, 0.5);
+    --icon-color: #5f6368;
+    --icon-hover-bg: #f8f9fa;
+    --icon-hover-color: #202124;
+    --sidebar-active-bg: #f8f9fa;
+    --toc-hover-bg: #f8f9fa;
+    --celebration-bg: #ffffff;
+    --drawer-bg: #ffffff;
+    --drawer-overlay: rgba(0, 0, 0, 0.4);
+    --drawer-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+    --toolbar-border: #e8eaed;
+    --sidebar-border: #e8eaed;
+    --logo-color: #5f6368;
+    --logo-text-color: #202124;
+    --sidebar-item-color: #3c4043;
+    --sidebar-item-hover: #f8f9fa;
+    --toc-item-color: #5f6368;
+    --toc-item-hover-color: #202124;
+    --content-bg: #ffffff;
+    --close-btn-color: rgba(255, 255, 255, 0.6);
+    --close-btn-hover-color: #ffffff;
+    --close-btn-hover-bg: rgba(255, 255, 255, 0.12);
+}
+
+/* ====== 深色模式 ====== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary: #818cf8;
+        --primary-light: #1e1b4b;
+        --primary-hover: #6366f1;
+        --primary-bg: #0f172a;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-tertiary: #64748b;
+        --border-color: #334155;
+        --border-subtle: rgba(148, 163, 184, 0.12);
+        --border-card: rgba(148, 163, 184, 0.16);
+        --bg-hover: #1e293b;
+        --bg-card: #1e293b;
+        --bg-body: #0f172a;
+        --bg-white: #1e293b;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24), 0 1px 3px rgba(0, 0, 0, 0.16);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.32), 0 1px 4px rgba(0, 0, 0, 0.16);
+        --shadow-card:
+            0 0 0 1px rgba(148, 163, 184, 0.12),
+            0 1px 2px rgba(0, 0, 0, 0.2),
+            0 4px 12px rgba(0, 0, 0, 0.24),
+            0 12px 28px rgba(0, 0, 0, 0.16);
+        --highlight-bg: #854d0e;
+        --overlay-bg: rgba(0, 0, 0, 0.5);
+        --icon-color: #94a3b8;
+        --icon-hover-bg: rgba(148, 163, 184, 0.1);
+        --icon-hover-color: #f1f5f9;
+        --sidebar-active-bg: rgba(129, 140, 248, 0.15);
+        --toc-hover-bg: #1e293b;
+        --celebration-bg: #1e293b;
+        --drawer-bg: #1e293b;
+        --drawer-overlay: rgba(0, 0, 0, 0.6);
+        --drawer-shadow: 2px 0 12px rgba(0, 0, 0, 0.4);
+        --toolbar-border: #334155;
+        --sidebar-border: #334155;
+        --logo-color: #94a3b8;
+        --logo-text-color: #f1f5f9;
+        --sidebar-item-color: #cbd5e1;
+        --sidebar-item-hover: #334155;
+        --toc-item-color: #94a3b8;
+        --toc-item-hover-color: #f1f5f9;
+        --content-bg: #1e293b;
+        --close-btn-color: rgba(148, 163, 184, 0.6);
+        --close-btn-hover-color: #f1f5f9;
+        --close-btn-hover-bg: rgba(148, 163, 184, 0.12);
+    }
+}
