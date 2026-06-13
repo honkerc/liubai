@@ -5,7 +5,8 @@ set -euo pipefail
 
 DOMAIN="${DOMAIN:-your-domain.com}"
 INSTALL_ROOT="${INSTALL_ROOT:-/www/blog}"
-DATA_DIR="${DATA_DIR:-/www/blog/data}"
+DATA_DIR="${DATA_DIR:-/www}"
+UPLOAD_DIR="${UPLOAD_DIR:-/www/uploads}"
 ENV_FILE="${ENV_FILE:-/etc/blog/env}"
 SERVICE_USER="${SERVICE_USER:-www-data}"
 
@@ -22,7 +23,7 @@ echo "==> [1/6] 构建前端"
 bash "$ROOT/scripts/build-release.sh"
 
 echo "==> [2/6] 同步项目到 $INSTALL_ROOT"
-mkdir -p "$INSTALL_ROOT" "$DIST" "$DATA_DIR" "$(dirname "$ENV_FILE")"
+mkdir -p "$INSTALL_ROOT" "$DIST" "$UPLOAD_DIR" "$(dirname "$ENV_FILE")"
 
 rsync -a --delete \
     --exclude node_modules \
@@ -66,16 +67,16 @@ echo "==> [6/6] 配置 Nginx"
 NGINX_SITE="/etc/nginx/sites-available/blog"
 sed "s|your-domain.com|$DOMAIN|g" "$INSTALL_ROOT/deploy/nginx.conf" > "$NGINX_SITE"
 
-if [[ "$INSTALL_ROOT" != "/www/blog" ]] || [[ "$DATA_DIR" != "/www/blog/data" ]]; then
+if [[ "$INSTALL_ROOT" != "/www/blog" ]] || [[ "$UPLOAD_DIR" != "/www/uploads" ]]; then
     sed -i "s|/www/blog/dist|$DIST|g" "$NGINX_SITE"
-    sed -i "s|/www/blog/data/uploads|$DATA_DIR/uploads|g" "$NGINX_SITE"
+    sed -i "s|/www/uploads/|$UPLOAD_DIR/|g" "$NGINX_SITE"
 fi
 
 ln -sf "$NGINX_SITE" /etc/nginx/sites-enabled/blog
 nginx -t
 systemctl reload nginx
 
-chown -R "$SERVICE_USER:$SERVICE_USER" "$DATA_DIR" "$DIST"
+chown -R "$SERVICE_USER:$SERVICE_USER" "$UPLOAD_DIR" "$DIST"
 chown -R root:root "$INSTALL_ROOT"
 chmod -R o+rX "$INSTALL_ROOT" "$VENV"
 

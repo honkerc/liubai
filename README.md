@@ -179,7 +179,7 @@ PORT=8000
 sudo DOMAIN=blog.example.com ./scripts/deploy-nginx.sh
 ```
 
-默认安装目录 `/www/blog`，数据目录 `/www/blog/data`，环境变量 `/etc/blog/env`。
+默认安装目录 `/www/blog`，上传目录 `/www/uploads/`，数据库 `/www/db.sqlite3`，环境变量 `/etc/blog/env`。
 
 ### 方式二：Docker
 

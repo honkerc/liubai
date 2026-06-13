@@ -7,7 +7,7 @@
 ```
 用户 → Nginx (:80 / :443)
          ├─ /              → /www/blog/dist（SPA）
-         ├─ /uploads/      → /www/blog/data/uploads/
+         ├─ /uploads/      → /www/uploads/
          └─ /api/          → 127.0.0.1:8000
 
 systemd: blog.service → uvicorn（SERVE_STATIC=false）
@@ -17,7 +17,8 @@ systemd: blog.service → uvicorn（SERVE_STATIC=false）
 |------|------|
 | `/www/blog` | 项目代码、`.venv`、`dist/` |
 | `/www/blog/backend` | FastAPI 工作目录 |
-| `/www/blog/data` | SQLite 与 uploads |
+| `/www/uploads/` | 上传文件 |
+| `/www/db.sqlite3` | SQLite 数据库 |
 | `/etc/blog/env` | 后端环境变量 |
 
 ## 一键部署
@@ -37,7 +38,7 @@ sudo certbot --nginx -d blog.example.com   # 可选 HTTPS
 
 ```bash
 ./scripts/build-release.sh
-sudo mkdir -p /www/blog /www/blog/data /www/blog/dist
+sudo mkdir -p /www/blog /www/uploads /www/blog/dist
 # rsync 代码到 /www/blog，安装 venv 与依赖
 sudo cp deploy/env.example /etc/blog/env
 sudo cp deploy/blog.service /etc/systemd/system/
@@ -71,7 +72,7 @@ python start.py
 
 ## 环境变量
 
-见 `deploy/env.example`。Nginx 部署时 `DATA_DIR=/www/blog/data`，`SERVE_STATIC=false`。
+见 `deploy/env.example`。Nginx 部署时 `DATA_DIR=/www`（库在 `/www/db.sqlite3`，上传在 `/www/uploads/`），`SERVE_STATIC=false`。
 
 ## 上线检查
 

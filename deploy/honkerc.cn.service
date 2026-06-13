@@ -1,13 +1,10 @@
-# systemd 服务单元（留白博客 API）
-# 安装：sudo cp deploy/blog.service /etc/systemd/system/
-#       sudo systemctl daemon-reload
-#       sudo systemctl enable --now blog
-#
-# 默认安装目录 /www/blog，环境变量 /etc/blog/env
+# systemd — honkerc.cn（/www/blog）
+# sudo cp deploy/honkerc.cn.service /etc/systemd/system/blog.service
+# sudo systemctl daemon-reload && sudo systemctl enable --now blog
 
 [Unit]
 Description=留白 Blog API (FastAPI)
-Documentation=file:/www/blog/DEPLOY.md
+Documentation=file:/www/blog/README.md
 After=network-online.target
 Wants=network-online.target
 
