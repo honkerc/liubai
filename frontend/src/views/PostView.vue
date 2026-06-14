@@ -1548,6 +1548,8 @@ a.detail-topic-tag:hover {
         width: calc(100% - 16px);
         padding: 8px 10px;
     }
+
+    .editor-toolbar {
         bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         max-width: calc(100% - 16px);
     }
