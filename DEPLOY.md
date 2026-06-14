@@ -20,7 +20,7 @@ systemd: blog.service → uvicorn（SERVE_STATIC=false）
 | `/www/liubai/frontend/dist` | 前端静态文件（Nginx root） |
 | `/www/liubai/uploads/` | 上传文件 |
 | `/www/liubai/db.sqlite3` | SQLite 数据库 |
-| `/etc/blog/env` | 后端环境变量 |
+| `/www/liubai/backend/.env` | 后端环境变量 |
 
 ## 一键部署
 
@@ -28,7 +28,7 @@ systemd: blog.service → uvicorn（SERVE_STATIC=false）
 sudo DOMAIN=blog.example.com ./scripts/deploy-nginx.sh
 ```
 
-编辑 `/etc/blog/env`，修改 `SECRET_KEY`、`ADMIN_PASSWORD` 后：
+编辑 `/www/liubai/backend/.env`，修改 `SECRET_KEY`、`ADMIN_PASSWORD` 后：
 
 ```bash
 sudo systemctl restart blog
@@ -41,7 +41,8 @@ sudo certbot --nginx -d blog.example.com   # 可选 HTTPS
 ./scripts/build-release.sh
 sudo mkdir -p /www/liubai /www/liubai/uploads /www/liubai/frontend/dist
 # rsync 代码到 /www/liubai，安装 venv 与依赖
-sudo cp deploy/env.example /etc/blog/env
+sudo cp backend/.env.example /www/liubai/backend/.env
+sudo chmod 600 /www/liubai/backend/.env
 sudo cp deploy/blog.service /etc/systemd/system/
 sudo cp deploy/nginx.conf /etc/nginx/sites-available/blog
 sudo systemctl enable --now blog
@@ -76,7 +77,7 @@ sudo -u www-data /www/liubai/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 
 | 原因 | 处理 |
 |------|------|
 | 未装 venv / 依赖 | `cd /www/liubai && python3 -m venv .venv && .venv/bin/pip install -r backend/requirements.txt` |
-| `/etc/blog/env` 缺失 | `sudo cp deploy/honkerc.cn.env.example /etc/blog/env` 并修改密钥 |
+| `backend/.env` 缺失 | `sudo cp backend/.env.example /www/liubai/backend/.env` 并修改密钥 |
 | **www-data 无法写数据目录** | 见下方权限 |
 | 8000 端口被占用 | `sudo ss -tlnp \| grep 8000` |
 
@@ -118,7 +119,7 @@ python start.py
 
 ## 环境变量
 
-见 `deploy/env.example`。Nginx 部署时 `DATA_DIR=/www/liubai`（库在 `/www/liubai/db.sqlite3`，上传在 `/www/liubai/uploads/`），`SERVE_STATIC=false`。
+见 `backend/.env.example`。Nginx 部署时 `DATA_DIR=/www/liubai`（库在 `/www/liubai/db.sqlite3`，上传在 `/www/liubai/uploads/`），`SERVE_STATIC=false`。
 
 ## 上线检查
 

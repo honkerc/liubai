@@ -7,7 +7,7 @@ DOMAIN="${DOMAIN:-your-domain.com}"
 INSTALL_ROOT="${INSTALL_ROOT:-/www/liubai}"
 DATA_DIR="${DATA_DIR:-/www/liubai}"
 UPLOAD_DIR="${UPLOAD_DIR:-/www/liubai/uploads}"
-ENV_FILE="${ENV_FILE:-/etc/blog/env}"
+ENV_FILE="${ENV_FILE:-/www/liubai/backend/.env}"
 SERVICE_USER="${SERVICE_USER:-www-data}"
 
 if [[ "$(id -u)" -ne 0 ]]; then
@@ -33,6 +33,7 @@ rsync -a --delete \
     --exclude data \
     --exclude 'backend/db.sqlite3' \
     --exclude 'backend/uploads' \
+    --exclude 'backend/.env' \
     "$ROOT/" "$INSTALL_ROOT/"
 
 echo "==> [3/6] 安装 Python 依赖"
@@ -47,7 +48,7 @@ rsync -a --delete "$ROOT/frontend/dist/" "$DIST/"
 
 echo "==> [5/6] 配置 systemd"
 if [[ ! -f "$ENV_FILE" ]]; then
-    cp "$INSTALL_ROOT/deploy/env.example" "$ENV_FILE"
+    cp "$INSTALL_ROOT/backend/.env.example" "$ENV_FILE"
     chmod 600 "$ENV_FILE"
     echo "已创建 $ENV_FILE — 请修改 SECRET_KEY 与 ADMIN_PASSWORD 后重启服务"
 fi
