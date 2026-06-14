@@ -6,7 +6,7 @@
 
 ```
 用户 → Nginx (:80 / :443)
-         ├─ /              → /www/liubai/dist（SPA）
+         ├─ /              → /www/liubai/frontend/dist（SPA）
          ├─ /uploads/      → /www/liubai/uploads/
          └─ /api/          → 127.0.0.1:8000
 
@@ -15,8 +15,9 @@ systemd: blog.service → uvicorn（SERVE_STATIC=false）
 
 | 路径 | 用途 |
 |------|------|
-| `/www/liubai` | 项目代码、`.venv`、`dist/` |
+| `/www/liubai` | 项目代码、`.venv` |
 | `/www/liubai/backend` | FastAPI 工作目录 |
+| `/www/liubai/frontend/dist` | 前端静态文件（Nginx root） |
 | `/www/liubai/uploads/` | 上传文件 |
 | `/www/liubai/db.sqlite3` | SQLite 数据库 |
 | `/etc/blog/env` | 后端环境变量 |
@@ -38,7 +39,7 @@ sudo certbot --nginx -d blog.example.com   # 可选 HTTPS
 
 ```bash
 ./scripts/build-release.sh
-sudo mkdir -p /www/liubai /www/liubai/uploads /www/liubai/dist
+sudo mkdir -p /www/liubai /www/liubai/uploads /www/liubai/frontend/dist
 # rsync 代码到 /www/liubai，安装 venv 与依赖
 sudo cp deploy/env.example /etc/blog/env
 sudo cp deploy/blog.service /etc/systemd/system/

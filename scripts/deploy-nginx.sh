@@ -17,7 +17,7 @@ fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VENV="$INSTALL_ROOT/.venv"
-DIST="$INSTALL_ROOT/dist"
+DIST="$INSTALL_ROOT/frontend/dist"
 
 echo "==> [1/6] 构建前端"
 bash "$ROOT/scripts/build-release.sh"
@@ -68,7 +68,7 @@ NGINX_SITE="/etc/nginx/sites-available/blog"
 sed "s|your-domain.com|$DOMAIN|g" "$INSTALL_ROOT/deploy/nginx.conf" > "$NGINX_SITE"
 
 if [[ "$INSTALL_ROOT" != "/www/liubai" ]] || [[ "$UPLOAD_DIR" != "/www/liubai/uploads" ]]; then
-    sed -i "s|/www/liubai/dist|$DIST|g" "$NGINX_SITE"
+    sed -i "s|/www/liubai/frontend/dist|$DIST|g" "$NGINX_SITE"
     sed -i "s|/www/liubai/uploads/|$UPLOAD_DIR/|g" "$NGINX_SITE"
 fi
 

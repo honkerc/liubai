@@ -179,7 +179,7 @@ PORT=8000
 sudo DOMAIN=blog.example.com ./scripts/deploy-nginx.sh
 ```
 
-默认安装目录 `/www/liubai`，上传目录 `/www/liubai/uploads/`，数据库 `/www/liubai/db.sqlite3`，环境变量 `/etc/blog/env`。
+默认安装目录 `/www/liubai`，前端静态目录 `/www/liubai/frontend/dist`，上传 `/www/liubai/uploads/`，数据库 `/www/liubai/db.sqlite3`。
 
 ### 方式二：Docker
 
