@@ -4,6 +4,7 @@ tortoise-orm==0.20.1
 pydantic
 python-multipart
 passlib[bcrypt]
+bcrypt==4.0.1
 python-jose[cryptography]
 aiosqlite>=0.16.0,<0.18.0
 Pillow>=10.0.0
