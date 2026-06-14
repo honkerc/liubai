@@ -156,7 +156,8 @@ PORT=8000
 |------|------|
 | `SECRET_KEY` | JWT 签名密钥，生产必改 |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | 管理员账号 |
-| `DATA_DIR` | 数据目录（SQLite、`uploads/`），默认 `backend/` |
+| `DATA_DIR` | 数据目录（SQLite），默认 `backend/` |
+| `UPLOAD_DIR` | 上传目录，默认 `{DATA_DIR}/uploads` |
 | `DATABASE_NAME` | 数据库文件名，默认 `db.sqlite3` |
 | `SERVE_STATIC` | 是否由后端托管前端静态文件（Docker / 本地验证用） |
 | `STATIC_DIR` | 前端 `dist` 目录路径 |

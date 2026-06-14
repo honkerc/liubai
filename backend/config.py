@@ -51,7 +51,17 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 
 DATABASE_PATH = DATA_DIR / os.getenv("DATABASE_NAME", "db.sqlite3")
-UPLOAD_ROOT = DATA_DIR / "uploads"
+
+
+def _resolve_upload_root() -> Path:
+    explicit = os.getenv("UPLOAD_DIR", "").strip()
+    if explicit:
+        return Path(explicit).resolve()
+    return DATA_DIR / "uploads"
+
+
+UPLOAD_ROOT = _resolve_upload_root()
+UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
 
 STATIC_DIR = os.getenv("STATIC_DIR", "").strip()
 SERVE_STATIC = os.getenv("SERVE_STATIC", "").lower() in ("1", "true", "yes")

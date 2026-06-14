@@ -12,6 +12,24 @@
         >
 
         <div
+            v-if="uploading"
+            class="upload-status"
+            role="status"
+            aria-live="polite"
+        >
+            <div class="upload-status-head">
+                <span class="upload-status-name" :title="uploadFileName">{{ uploadFileName }}</span>
+                <span class="upload-status-meta">{{ uploadStatusMeta }}</span>
+            </div>
+            <div class="upload-status-track" :class="{ 'is-indeterminate': uploadIndeterminate }">
+                <div
+                    class="upload-status-bar"
+                    :style="uploadIndeterminate ? undefined : { width: uploadProgress + '%' }"
+                ></div>
+            </div>
+        </div>
+
+        <div
             v-if="showBottomBar && showSaveStatus"
             class="save-status"
             :class="'is-' + saveStatusDisplay"
@@ -246,7 +264,7 @@
 
 <script>
 import { articleApi } from '@/api'
-import { uploadApi } from '@/api/upload'
+import { uploadApi, formatFileSize } from '@/api/upload'
 import { resolveMarkdownHtml } from '@/utils/resolveMarkdownHtml'
 import { parseMarkdown } from '@/utils/editorMarkdown'
 import { insertBlock, MD_SNIPPETS, TABLE_3X3, LIST_BULLET_3, LIST_ORDERED_3, LIST_TASK_3, LIST_CURSOR_OFFSET } from '@/utils/markdownInsert'
@@ -287,6 +305,11 @@ export default {
             publishing: false,
             pinning: false,
             uploading: false,
+            uploadFileName: '',
+            uploadProgress: 0,
+            uploadBytesLoaded: 0,
+            uploadBytesTotal: 0,
+            uploadPhase: 'idle',
             draftCreatedAt: null,
             saveSavedFlash: false,
             saveSavedFlashTimer: null,
@@ -329,6 +352,19 @@ export default {
             if (this.saveStatus === 'unsaved') return '待保存'
             if (this.saveSavedFlash) return '已保存'
             return ''
+        },
+        uploadIndeterminate() {
+            return this.uploadPhase === 'uploading' && this.uploadProgress < 0
+        },
+        uploadStatusMeta() {
+            if (this.uploadPhase === 'processing') return '处理中…'
+            if (this.uploadBytesTotal > 0) {
+                const size = `${formatFileSize(this.uploadBytesLoaded)} / ${formatFileSize(this.uploadBytesTotal)}`
+                if (this.uploadProgress >= 0) return `${this.uploadProgress}% · ${size}`
+                return size
+            }
+            if (this.uploadProgress >= 0) return `${this.uploadProgress}%`
+            return '上传中…'
         },
         renderedContent() {
             if (!this.article?.content) return ''
@@ -851,9 +887,20 @@ export default {
         },
         async uploadFile(file) {
             this.uploading = true
+            this.uploadFileName = file.name || '文件'
+            this.uploadProgress = 0
+            this.uploadBytesLoaded = 0
+            this.uploadBytesTotal = file.size || 0
+            this.uploadPhase = 'uploading'
             try {
                 await this.ensureBodyEdit()
-                const res = await uploadApi.upload(file)
+                const res = await uploadApi.uploadWithProgress(file, ({ loaded, total, percent }) => {
+                    this.uploadBytesLoaded = loaded
+                    if (total > 0) this.uploadBytesTotal = total
+                    this.uploadProgress = percent
+                })
+                this.uploadPhase = 'processing'
+                this.uploadProgress = 100
                 const ta = this.getTextarea()
                 if (!ta) return
                 const md = buildUploadMarkdown(res, file.name)
@@ -864,6 +911,11 @@ export default {
                 this.$toast.error('上传失败: ' + (err.message || '未知错误'))
             } finally {
                 this.uploading = false
+                this.uploadFileName = ''
+                this.uploadProgress = 0
+                this.uploadBytesLoaded = 0
+                this.uploadBytesTotal = 0
+                this.uploadPhase = 'idle'
             }
         },
         async onFileSelected(e) {
@@ -1263,6 +1315,72 @@ a.detail-topic-tag:hover {
     user-select: none;
 }
 
+.upload-status {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 16;
+    width: min(420px, calc(100% - 32px));
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    pointer-events: none;
+    user-select: none;
+}
+
+.upload-status-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    min-width: 0;
+}
+
+.upload-status-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.upload-status-meta {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.upload-status-track {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--bg-hover);
+    overflow: hidden;
+}
+
+.upload-status-bar {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--primary);
+    transition: width 0.15s ease;
+}
+
+.upload-status-track.is-indeterminate .upload-status-bar {
+    width: 35% !important;
+    animation: upload-indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes upload-indeterminate {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(320%); }
+}
+
 .save-status-dot {
     width: 6px;
     height: 6px;
@@ -1425,7 +1543,11 @@ a.detail-topic-tag:hover {
         right: 8px;
     }
 
-    .editor-toolbar {
+    .upload-status {
+        top: 8px;
+        width: calc(100% - 16px);
+        padding: 8px 10px;
+    }
         bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         max-width: calc(100% - 16px);
     }

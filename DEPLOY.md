@@ -119,7 +119,7 @@ python start.py
 
 ## 环境变量
 
-见 `backend/.env.example`。Nginx 部署时 `DATA_DIR=/www/liubai`（库在 `/www/liubai/db.sqlite3`，上传在 `/www/liubai/uploads/`），`SERVE_STATIC=false`。
+见 `backend/.env.example`。Nginx 部署时 `DATA_DIR=/www/liubai`、`UPLOAD_DIR=/www/liubai/uploads`（Nginx `location /uploads/` 的 `alias` 需与此一致），`SERVE_STATIC=false`。
 
 ## 上线检查
 
