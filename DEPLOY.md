@@ -51,12 +51,57 @@ sudo nginx -t && sudo systemctl reload nginx
 ## 运维
 
 ```bash
-systemctl status blog
-journalctl -u blog -f
+systemctl status liubai    # 或 blog
+journalctl -u liubai -n 80 --no-pager
 curl http://127.0.0.1:8000/api/health
 ```
 
-更新：在 `/www/liubai` 拉代码后重新执行 `deploy-nginx.sh`。
+### 服务启动失败（exit-code 3）
+
+1. **看日志**（最重要）：
+
+```bash
+sudo journalctl -u liubai -n 80 --no-pager
+```
+
+2. **用 www-data 手动跑**（复现错误）：
+
+```bash
+cd /www/liubai/backend
+sudo -u www-data /www/liubai/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+3. **常见原因**
+
+| 原因 | 处理 |
+|------|------|
+| 未装 venv / 依赖 | `cd /www/liubai && python3 -m venv .venv && .venv/bin/pip install -r backend/requirements.txt` |
+| `/etc/blog/env` 缺失 | `sudo cp deploy/honkerc.cn.env.example /etc/blog/env` 并修改密钥 |
+| **www-data 无法写数据目录** | 见下方权限 |
+| 8000 端口被占用 | `sudo ss -tlnp \| grep 8000` |
+
+4. **数据目录权限**（`DATA_DIR=/www/liubai` 时）：
+
+```bash
+sudo mkdir -p /www/liubai/uploads
+sudo chown -R www-data:www-data /www/liubai/uploads
+sudo chown www-data:www-data /www/liubai/db.sqlite3 2>/dev/null || true
+# 若库尚未创建，需让 www-data 能在 /www/liubai 下建库：
+sudo chgrp www-data /www/liubai
+sudo chmod 775 /www/liubai
+```
+
+5. **启用并重启**：
+
+```bash
+sudo cp deploy/liubai.service /etc/systemd/system/liubai.service
+sudo systemctl daemon-reload
+sudo systemctl enable liubai
+sudo systemctl restart liubai
+sudo systemctl status liubai
+```
+
+更新：在 `/www/liubai` 拉代码后重新执行 `deploy-nginx.sh` 或手动 `git pull && systemctl restart liubai`。
 
 ## Docker（可选）
 
