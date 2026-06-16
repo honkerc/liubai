@@ -1,19 +1,8 @@
 <template>
     <div class="article-toc">
-        <div v-if="displayHeadings.length" class="article-toc-head">
-            <span class="article-toc-head-badge">
-                <svg class="article-toc-head-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                    aria-hidden="true">
-                    <line x1="8" y1="6" x2="21" y2="6"></line>
-                    <line x1="8" y1="12" x2="21" y2="12"></line>
-                    <line x1="8" y1="18" x2="21" y2="18"></line>
-                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                </svg>
-                <span>目录</span>
-            </span>
+        <div v-if="displayHeadings.length" class="article-toc-head" aria-hidden="true">
+            <span class="article-toc-head-bar"></span>
+            <span class="article-toc-head-rule"></span>
         </div>
         <nav v-if="displayHeadings.length" class="article-toc-nav" aria-label="文章目录">
             <button
@@ -65,28 +54,26 @@ export default {
 }
 
 .article-toc-head {
-    padding: 2px 12px 10px;
-    flex-shrink: 0;
-}
-
-.article-toc-head-badge {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: var(--text-secondary);
-    background: linear-gradient(135deg, var(--bg-card) 0%, var(--primary-light) 140%);
-    border: 1px solid var(--border-subtle);
+    gap: 10px;
+    padding: 8px 14px 12px;
+    flex-shrink: 0;
 }
 
-.article-toc-head-icon {
+.article-toc-head-bar {
     flex-shrink: 0;
-    color: var(--primary);
-    opacity: 0.85;
+    width: 3px;
+    height: 14px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--primary) 0%, rgba(79, 110, 247, 0.35) 100%);
+    opacity: 0.55;
+}
+
+.article-toc-head-rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
 }
 
 .article-toc-nav {
