@@ -1,5 +1,20 @@
 <template>
     <div class="article-toc">
+        <div v-if="displayHeadings.length" class="article-toc-head">
+            <span class="article-toc-head-badge">
+                <svg class="article-toc-head-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>目录</span>
+            </span>
+        </div>
         <nav v-if="displayHeadings.length" class="article-toc-nav" aria-label="文章目录">
             <button
                 v-for="h in displayHeadings"
@@ -12,7 +27,12 @@
                 ]"
                 @click="$emit('select', h.id)"
             >
-                {{ h.text }}
+                <span v-if="h.level === 1" class="article-toc-level1-bar" aria-hidden="true"></span>
+                <span v-else class="article-toc-rail" :class="`rail-${h.level}`" aria-hidden="true">
+                    <span class="article-toc-rail-stem"></span>
+                    <span class="article-toc-rail-node"></span>
+                </span>
+                <span class="article-toc-text">{{ h.text }}</span>
             </button>
         </nav>
         <p v-else class="article-toc-empty">使用 # 标题生成目录</p>
@@ -29,8 +49,6 @@ export default {
     emits: ['select'],
     computed: {
         displayHeadings() {
-            const primary = this.headings.filter((h) => h.level <= 2)
-            if (primary.length > 0) return primary
             return this.headings.filter((h) => h.level <= 3)
         },
     },
@@ -43,13 +61,38 @@ export default {
     flex-direction: column;
     height: 100%;
     min-height: 0;
-    padding: 4px 0 8px;
+    padding: 8px 0 12px;
+}
+
+.article-toc-head {
+    padding: 2px 12px 10px;
+    flex-shrink: 0;
+}
+
+.article-toc-head-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--primary-light) 140%);
+    border: 1px solid var(--border-subtle);
+}
+
+.article-toc-head-icon {
+    flex-shrink: 0;
+    color: var(--primary);
+    opacity: 0.85;
 }
 
 .article-toc-nav {
     flex: 1;
     overflow-y: auto;
-    padding: 2px 10px 6px;
+    padding: 0 10px 8px;
     scrollbar-width: none;
 }
 
@@ -58,65 +101,183 @@ export default {
 }
 
 .article-toc-item {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     width: 100%;
     text-align: left;
     border: none;
     background: transparent;
-    color: var(--text-secondary);
-    font-size: 14px;
-    line-height: 1.35;
-    padding: 5px 8px;
-    margin: 1px 0;
-    border-radius: 4px;
+    color: var(--toc-item-color);
+    line-height: 1.45;
     cursor: pointer;
     font-family: inherit;
-    transition: color 0.15s, background 0.15s;
-    white-space: nowrap;
+    transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.article-toc-text {
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.article-toc-item:hover {
-    color: var(--text-primary);
-}
-
-.article-toc-item.active {
-    color: var(--primary);
-    background: var(--primary-light);
-    font-weight: 500;
-}
-
+/* 一级：章节块 */
 .article-toc-item.level-1 {
-    font-weight: 500;
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     color: var(--text-primary);
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+
+.article-toc-item.level-1:first-child {
+    margin-top: 0;
+}
+
+.article-toc-level1-bar {
+    flex-shrink: 0;
+    width: 3px;
+    height: 16px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--primary) 0%, rgba(79, 110, 247, 0.35) 100%);
+    opacity: 0.55;
+    transition: opacity 0.18s ease, height 0.18s ease;
+}
+
+.article-toc-item.level-1:hover:not(.active) {
+    background: var(--toc-hover-bg);
+    border-color: var(--border-subtle);
+}
+
+.article-toc-item.level-1:hover:not(.active) .article-toc-level1-bar {
+    opacity: 0.85;
+}
+
+.article-toc-item.level-1.active {
+    color: var(--primary);
+    background: linear-gradient(90deg, var(--primary-light) 0%, rgba(238, 241, 255, 0.35) 72%, transparent 100%);
+    border-color: rgba(79, 110, 247, 0.18);
+    box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.article-toc-item.level-1.active .article-toc-level1-bar {
+    opacity: 1;
+    height: 18px;
+}
+
+/* 二三级：树形导轨 */
+.article-toc-rail {
+    position: relative;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.article-toc-rail-stem {
+    position: absolute;
+    left: 8px;
+    top: -10px;
+    bottom: 50%;
+    width: 1px;
+    background: linear-gradient(180deg, transparent 0%, var(--border-color) 28%, var(--border-color) 100%);
+    opacity: 0.9;
+}
+
+.article-toc-rail-node {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.rail-2 .article-toc-rail-node {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-white);
+    transform: rotate(45deg);
+}
+
+.rail-3 .article-toc-rail-stem {
+    left: 9px;
+}
+
+.rail-3 .article-toc-rail-node {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-color);
+    box-shadow: 0 0 0 3px var(--bg-white);
 }
 
 .article-toc-item.level-2 {
-    padding-left: 20px;
+    margin-top: 2px;
+    padding: 8px 10px 8px 6px;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    border-radius: 7px;
+}
+
+.article-toc-item.level-3 {
+    margin-top: 1px;
+    padding: 7px 10px 7px 20px;
     font-size: 13px;
     font-weight: 400;
     color: var(--text-tertiary);
+    border-radius: 6px;
 }
 
-.article-toc-item.level-2:hover {
-    color: var(--text-secondary);
+.article-toc-item.level-2:hover:not(.active),
+.article-toc-item.level-3:hover:not(.active) {
+    color: var(--toc-item-hover-color);
+    background: var(--toc-hover-bg);
+}
+
+.article-toc-item.level-2:hover:not(.active) .article-toc-rail-node {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.article-toc-item.level-3:hover:not(.active) .article-toc-rail-node {
+    background: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .article-toc-item.level-2.active {
     color: var(--primary);
+    font-weight: 500;
+    background: linear-gradient(90deg, rgba(238, 241, 255, 0.95) 0%, rgba(238, 241, 255, 0.25) 100%);
 }
 
-.article-toc-item.level-3 {
-    padding-left: 32px;
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--text-tertiary);
+.article-toc-item.level-2.active .article-toc-rail-node {
+    border-color: var(--primary);
+    background: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.article-toc-item.level-3.active {
+    color: var(--primary);
+    font-weight: 500;
+    background: linear-gradient(90deg, rgba(238, 241, 255, 0.75) 0%, transparent 100%);
+}
+
+.article-toc-item.level-3.active .article-toc-rail-node {
+    background: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .article-toc-empty {
     margin: 0;
-    padding: 12px 16px;
+    padding: 14px 16px;
     font-size: 13px;
     color: var(--text-tertiary);
     line-height: 1.5;

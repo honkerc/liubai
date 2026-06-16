@@ -118,7 +118,24 @@ sudo systemctl restart liubai
 sudo systemctl status liubai
 ```
 
-更新：在 `/www/liubai` 拉代码后重新执行 `deploy-nginx.sh` 或手动 `git pull && systemctl restart liubai`。
+更新：**务必先 `git pull`**，再构建前端并重启服务：
+
+```bash
+cd /www/liubai
+chmod +x scripts/update-production.sh
+./scripts/update-production.sh
+```
+
+或手动：
+
+```bash
+cd /www/liubai
+git pull origin master
+cd frontend && npm ci && npm run build
+sudo systemctl restart liubai
+```
+
+仅改 Nginx / systemd 配置时，可重新执行 `deploy-nginx.sh`；**日常代码更新不要忘记 pull**。
 
 ## Docker（可选）
 

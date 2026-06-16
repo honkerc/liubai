@@ -43,18 +43,43 @@
                     </button>
                     <div v-if="headerMenuOpen" class="app-sidebar-menu-panel">
                         <router-link to="/search" class="app-sidebar-menu-item" @click="closeHeaderMenu">
-                            搜索
+                            <span class="app-sidebar-menu-icon" aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="7"></circle>
+                                    <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+                                </svg>
+                            </span>
+                            <span class="app-sidebar-menu-label">搜索</span>
                         </router-link>
                         <router-link to="/topics" class="app-sidebar-menu-item" @click="closeHeaderMenu">
-                            话题
+                            <span class="app-sidebar-menu-icon" aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 9h16"></path>
+                                    <path d="M4 15h16"></path>
+                                    <path d="M10 3L8 21"></path>
+                                    <path d="M16 3l-2 18"></path>
+                                </svg>
+                            </span>
+                            <span class="app-sidebar-menu-label">话题</span>
                         </router-link>
+                        <div class="app-sidebar-menu-divider"></div>
                         <button
                             v-if="!isLoggedIn"
                             type="button"
                             class="app-sidebar-menu-item"
                             @click="onLoginClick"
                         >
-                            登录
+                            <span class="app-sidebar-menu-icon" aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                    <polyline points="10 17 15 12 10 7"></polyline>
+                                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="app-sidebar-menu-label">登录</span>
                         </button>
                         <button
                             v-else
@@ -62,7 +87,15 @@
                             class="app-sidebar-menu-item app-sidebar-menu-item--danger"
                             @click="onLogoutClick"
                         >
-                            退出登录
+                            <span class="app-sidebar-menu-icon" aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="app-sidebar-menu-label">退出登录</span>
                         </button>
                     </div>
                 </div>
@@ -531,23 +564,31 @@ export default {
 
 .app-sidebar-menu-panel {
     position: absolute;
-    top: calc(100% + 4px);
+    top: calc(100% + 6px);
     right: 0;
     z-index: 30;
-    min-width: 120px;
-    padding: 4px;
-    border-radius: 8px;
+    min-width: 156px;
+    padding: 6px;
+    border-radius: 10px;
     background: var(--bg-white);
     border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
+}
+
+.app-sidebar-menu-divider {
+    height: 1px;
+    margin: 4px 6px;
+    background: var(--border-subtle);
 }
 
 .app-sidebar-menu-item {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     width: 100%;
-    padding: 8px 10px;
+    padding: 7px 8px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     background: transparent;
     color: var(--text-primary);
     font-size: 13px;
@@ -555,18 +596,53 @@ export default {
     text-decoration: none;
     cursor: pointer;
     font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.app-sidebar-menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.app-sidebar-menu-label {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
 }
 
 .app-sidebar-menu-item:hover {
     background: var(--bg-hover);
 }
 
+.app-sidebar-menu-item:hover .app-sidebar-menu-icon {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
 .app-sidebar-menu-item--danger {
     color: #dc2626;
 }
 
+.app-sidebar-menu-item--danger .app-sidebar-menu-icon {
+    color: #dc2626;
+    background: #fef2f2;
+}
+
 .app-sidebar-menu-item--danger:hover {
     background: #fef2f2;
+}
+
+.app-sidebar-menu-item--danger:hover .app-sidebar-menu-icon {
+    color: #b91c1c;
+    background: #fee2e2;
 }
 
 .app-sidebar-icon-btn {
@@ -589,6 +665,11 @@ export default {
 .app-sidebar-icon-btn:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
+}
+
+.app-sidebar-icon-btn[aria-expanded="true"] {
+    background: var(--primary-light);
+    color: var(--primary);
 }
 
 .app-sidebar-list {
