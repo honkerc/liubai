@@ -82,9 +82,15 @@ export default {
         }
         this._onMqChange()
         this._mq.addEventListener('change', this._onMqChange)
+        this._onAuthExpired = () => {
+            this.showLogin = true
+            this.$toast?.info('登录已过期，请重新登录')
+        }
+        window.addEventListener('auth-expired', this._onAuthExpired)
     },
     beforeUnmount() {
         this._mq?.removeEventListener('change', this._onMqChange)
+        window.removeEventListener('auth-expired', this._onAuthExpired)
     },
     methods: {
         toggleSidebar() {

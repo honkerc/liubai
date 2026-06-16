@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import AppLayout from '../components/AppLayout.vue'
 import { formatPageTitle } from '../constants/brand'
+import { isAuthenticated, tryRefreshSession } from '../utils/authSession'
 
 
 
@@ -151,19 +152,17 @@ const router = createRouter({
 
 
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
 
     const title = to.meta?.title
 
     document.title = formatPageTitle(title)
 
-
+    await tryRefreshSession()
 
     if (to.meta?.requiresAuth) {
 
-        const token = localStorage.getItem('token')
-
-        if (!token) {
+        if (!isAuthenticated()) {
 
             next({ name: 'login', query: { redirect: to.fullPath } })
 

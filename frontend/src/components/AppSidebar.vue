@@ -3,46 +3,69 @@
         <div class="app-sidebar-header">
             <SiteBrandLink />
             <div class="app-sidebar-header-actions">
-                <router-link to="/topics" class="app-sidebar-icon-btn" title="话题">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                    </svg>
-                </router-link>
-                <router-link to="/search" class="app-sidebar-icon-btn" title="搜索">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <line x1="20" y1="20" x2="16.5" y2="16.5"></line>
-                    </svg>
-                </router-link>
-                <button class="app-sidebar-icon-btn" title="写文章" @click="createNewArticle">
+                <button
+                    v-if="isLoggedIn"
+                    class="app-sidebar-icon-btn"
+                    title="写文章"
+                    @click="createNewArticle"
+                >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
                 </button>
-                <button v-if="!isLoggedIn" class="app-sidebar-icon-btn" @click="$emit('login-required')" title="登录">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                        <polyline points="10 17 15 12 10 7"></polyline>
-                        <line x1="15" y1="12" x2="3" y2="12"></line>
-                    </svg>
-                </button>
-                <button v-else class="app-sidebar-icon-btn" @click="logout" title="退出">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                </button>
+                <div class="app-sidebar-menu" v-click-outside="closeHeaderMenu">
+                    <button
+                        class="app-sidebar-icon-btn"
+                        title="更多"
+                        :aria-expanded="headerMenuOpen"
+                        @click="headerMenuOpen = !headerMenuOpen"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="5" r="1.5" fill="currentColor"></circle>
+                            <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
+                            <circle cx="12" cy="19" r="1.5" fill="currentColor"></circle>
+                        </svg>
+                    </button>
+                    <div v-if="headerMenuOpen" class="app-sidebar-menu-panel">
+                        <router-link to="/search" class="app-sidebar-menu-item" @click="closeHeaderMenu">
+                            搜索
+                        </router-link>
+                        <router-link to="/topics" class="app-sidebar-menu-item" @click="closeHeaderMenu">
+                            话题
+                        </router-link>
+                        <button
+                            v-if="!isLoggedIn"
+                            type="button"
+                            class="app-sidebar-menu-item"
+                            @click="onLoginClick"
+                        >
+                            登录
+                        </button>
+                        <button
+                            v-else
+                            type="button"
+                            class="app-sidebar-menu-item app-sidebar-menu-item--danger"
+                            @click="onLogoutClick"
+                        >
+                            退出登录
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="app-sidebar-list">
+            <ArticleToc
+                v-if="showArticleToc"
+                :title="articleViewState.title"
+                :headings="articleViewState.headings"
+                :active-id="articleViewState.activeHeadingId"
+                @back="goArticleList"
+                @select="scrollToHeading"
+            />
+            <template v-else>
             <SkeletonSidebarList v-if="loading" />
             <ErrorState
                 v-else-if="error"
@@ -115,6 +138,7 @@
                     :description="isLoggedIn ? '点击上方 + 开始写作' : ''"
                 />
             </template>
+            </template>
         </div>
     </aside>
 </template>
@@ -123,6 +147,7 @@
 import EmptyState from '@/components/state/EmptyState.vue'
 import ErrorState from '@/components/state/ErrorState.vue'
 import SkeletonSidebarList from '@/components/state/SkeletonSidebarList.vue'
+import ArticleToc from '@/components/ArticleToc.vue'
 import { articleApi } from '@/api'
 import { routeTitleParam, toArticleRoute, toNewArticleRoute, isNewArticleRoute } from '@/utils/articleRoute'
 import {
@@ -131,12 +156,27 @@ import {
     editorState,
     getArticleStatusClass,
 } from '@/utils/articleEditorState'
+import { articleViewState, hideArticleToc, setActiveHeading } from '@/utils/articleViewState'
+import { authState, clearSession, isAuthenticated } from '@/utils/authSession'
 import { clearLocalDraft, hasLocalDraft } from '@/utils/editorDraft'
 import SiteBrandLink from '@/components/SiteBrandLink.vue'
 
 export default {
     name: 'AppSidebar',
-    components: { EmptyState, ErrorState, SkeletonSidebarList, SiteBrandLink },
+    components: { EmptyState, ErrorState, SkeletonSidebarList, ArticleToc, SiteBrandLink },
+    directives: {
+        clickOutside: {
+            mounted(el, binding) {
+                el._clickOutside = (e) => {
+                    if (!el.contains(e.target)) binding.value()
+                }
+                document.addEventListener('click', el._clickOutside)
+            },
+            unmounted(el) {
+                document.removeEventListener('click', el._clickOutside)
+            },
+        },
+    },
     props: {
         open: { type: Boolean, default: true },
     },
@@ -151,11 +191,17 @@ export default {
             _loadInFlight: null,
             pinningId: null,
             activeTitle: null,
+            articleViewState,
+            headerMenuOpen: false,
         }
     },
     computed: {
+        showArticleToc() {
+            return this.$route.name === 'public-article' && articleViewState.inDetail
+        },
         isLoggedIn() {
-            return !!localStorage.getItem('token')
+            void authState.token
+            return isAuthenticated()
         },
         displayArticles() {
             const articles = this.articles.map(a => ({ ...a }))
@@ -201,6 +247,7 @@ export default {
     watch: {
         '$route'() {
             this.syncActiveTitle()
+            this.headerMenuOpen = false
         },
     },
     mounted() {
@@ -208,11 +255,25 @@ export default {
         this.syncActiveTitle()
         this._onRefresh = () => this.loadArticles({ force: true, silent: true })
         window.addEventListener('sidebar-articles-refresh', this._onRefresh)
+        this._onAuthChanged = () => this.onAuthChange()
+        window.addEventListener('auth-changed', this._onAuthChanged)
     },
     beforeUnmount() {
         window.removeEventListener('sidebar-articles-refresh', this._onRefresh)
+        window.removeEventListener('auth-changed', this._onAuthChanged)
     },
     methods: {
+        closeHeaderMenu() {
+            this.headerMenuOpen = false
+        },
+        onLoginClick() {
+            this.closeHeaderMenu()
+            this.$emit('login-required')
+        },
+        onLogoutClick() {
+            this.closeHeaderMenu()
+            this.logout()
+        },
         onAuthChange() {
             this.loaded = false
             this.authMode = null
@@ -364,9 +425,24 @@ export default {
             }
         },
         logout() {
-            localStorage.removeItem('token')
+            clearSession()
             this.onAuthChange()
             this.$router.push('/')
+        },
+        goArticleList() {
+            hideArticleToc()
+        },
+        scrollToHeading(id) {
+            if (!id) return
+            const root = document.querySelector('.layout-right-body')
+            const el = root?.querySelector(`#${CSS.escape(id)}`)
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                setActiveHeading(id)
+            }
+            if (window.matchMedia('(max-width: 768px)').matches) {
+                this.$emit('close')
+            }
         },
         formatDate(dateStr) {
             if (!dateStr) return ''
@@ -411,6 +487,51 @@ export default {
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-shrink: 0;
+}
+
+.app-sidebar-menu {
+    position: relative;
+}
+
+.app-sidebar-menu-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 30;
+    min-width: 120px;
+    padding: 4px;
+    border-radius: 8px;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.app-sidebar-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 13px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.app-sidebar-menu-item:hover {
+    background: var(--bg-hover);
+}
+
+.app-sidebar-menu-item--danger {
+    color: #dc2626;
+}
+
+.app-sidebar-menu-item--danger:hover {
+    background: #fef2f2;
 }
 
 .app-sidebar-icon-btn {

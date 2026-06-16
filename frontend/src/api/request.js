@@ -1,10 +1,16 @@
-import { handleUnauthorized } from '@/utils/authSession'
+import {
+    clearSession,
+    getToken,
+    handleUnauthorized,
+    setToken,
+    tryRefreshSession,
+} from '@/utils/authSession'
 import { getApiBase } from '@/utils/apiBase'
 
 const API_BASE = getApiBase()
 
 export async function request(url, options = {}) {
-    const token = localStorage.getItem('token')
+    const token = getToken()
     const isFormData = options.body instanceof FormData
     const headers = {
         ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
@@ -20,7 +26,13 @@ export async function request(url, options = {}) {
     })
 
     if (res.status === 401) {
-        handleUnauthorized()
+        if (!options.skipAuthRefresh && !options._retried) {
+            const ok = await tryRefreshSession()
+            if (ok) {
+                return request(url, { ...options, _retried: true })
+            }
+        }
+        handleUnauthorized({ immediate: options.skipAuthRefresh })
         throw new Error('登录已过期，请重新登录')
     }
 
@@ -37,3 +49,5 @@ export async function request(url, options = {}) {
 
     return res.json()
 }
+
+export { clearSession, getToken, setToken, tryRefreshSession }

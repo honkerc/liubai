@@ -275,6 +275,8 @@ import {
     notifySidebarRefresh,
     syncEditorState,
 } from '@/utils/articleEditorState'
+import { clearArticleView, syncArticleHeadings } from '@/utils/articleViewState'
+import { authState, isAuthenticated } from '@/utils/authSession'
 import { buildUploadMarkdown, UPLOAD_ACCEPT } from '@/utils/uploadMarkdown'
 import { enhanceMarkdownVideos } from '@/utils/enhanceMarkdownVideos'
 import { classifyLoadError } from '@/utils/apiError'
@@ -319,7 +321,8 @@ export default {
             return isNewArticleRoute(this.$route)
         },
         isLoggedIn() {
-            return !!localStorage.getItem('token')
+            void authState.token
+            return isAuthenticated()
         },
         isEditablePage() {
             if (this.isNewArticle) return this.isLoggedIn
@@ -401,6 +404,7 @@ export default {
         this.clearSaveSavedFlash()
         if (this.isEditablePage) this.autoSave()
         clearEditorState()
+        clearArticleView()
     },
     watch: {
         '$route'(to, from) {
@@ -448,6 +452,9 @@ export default {
         },
         renderedHtml() {
             this.$nextTick(this.enhanceVideos)
+        },
+        rawContent() {
+            this.syncArticleViewFromPost()
         },
     },
     methods: {
@@ -527,6 +534,11 @@ export default {
         renderMarkdown(content) {
             return parseMarkdown(content)
         },
+        syncArticleViewFromPost() {
+            if (this.$route.name !== 'public-article' || !this.article) return
+            const content = this.isLoggedIn ? this.rawContent : (this.article.content || '')
+            syncArticleHeadings(content, this.article.title || this.title)
+        },
         syncEditorStateToSidebar() {
             if (!this.isEditablePage) {
                 clearEditorState()
@@ -584,6 +596,7 @@ export default {
 
             if (this.$route.name !== 'public-article') return
 
+            clearArticleView()
             this.bodyEditMode = false
             this.loadError = null
 
@@ -601,10 +614,12 @@ export default {
                 if (this.isLoggedIn) {
                     this.syncFormFromArticle(this.article)
                 }
+                this.syncArticleViewFromPost()
             } catch (e) {
                 console.error('Failed to fetch article:', e)
                 this.article = null
                 this.loadError = classifyLoadError(e)
+                clearArticleView()
             } finally {
                 this.loading = false
                 if (this.isEditablePage) {

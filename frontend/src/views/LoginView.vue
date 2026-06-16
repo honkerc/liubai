@@ -27,6 +27,7 @@
 
 <script>
 import { authApi } from '@/api'
+import { setToken } from '@/utils/authSession'
 
 export default {
     data() {
@@ -53,7 +54,7 @@ export default {
             this.error = ''
             try {
                 const res = await authApi.login(this.username, this.password)
-                localStorage.setItem('token', res.access_token)
+                setToken(res.access_token)
                 this.$toast.success('登录成功')
                 this.$emit('login-success')
                 const redirect = this.$route.query.redirect || '/'

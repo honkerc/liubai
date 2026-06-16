@@ -1,5 +1,5 @@
 import { getApiBase } from '@/utils/apiBase'
-import { handleUnauthorized } from '@/utils/authSession'
+import { getToken, handleUnauthorized, tryRefreshSession } from '@/utils/authSession'
 
 export function formatFileSize(bytes) {
     if (!bytes || bytes <= 0) return '0 B'
@@ -47,10 +47,15 @@ export function uploadWithProgress(file, onProgress) {
             }
         })
 
-        xhr.addEventListener('load', () => {
+        xhr.addEventListener('load', async () => {
             if (xhr.status === 401) {
-                handleUnauthorized()
-                reject(new Error('登录已过期，请重新登录'))
+                const ok = await tryRefreshSession()
+                if (!ok) {
+                    handleUnauthorized()
+                    reject(new Error('登录已过期，请重新登录'))
+                } else {
+                    reject(new Error('登录已刷新，请重试上传'))
+                }
                 return
             }
             if (xhr.status >= 200 && xhr.status < 300) {
@@ -67,7 +72,7 @@ export function uploadWithProgress(file, onProgress) {
         xhr.addEventListener('error', () => reject(new Error('网络错误，上传失败')))
         xhr.addEventListener('abort', () => reject(new Error('上传已取消')))
 
-        const token = localStorage.getItem('token')
+        const token = getToken()
         xhr.open('POST', `${getApiBase()}/api/upload`)
         if (token) {
             xhr.setRequestHeader('Authorization', `Bearer ${token}`)
