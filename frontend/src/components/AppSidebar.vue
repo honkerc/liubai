@@ -23,8 +23,10 @@
                     @click="goArticleList"
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
+                        stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 18V6"></path>
+                        <path d="M11 12H3"></path>
+                        <path d="M7 8L3 12L7 16"></path>
                     </svg>
                 </button>
                 <div class="app-sidebar-menu" v-click-outside="closeHeaderMenu">
@@ -35,31 +37,30 @@
                         @click="headerMenuOpen = !headerMenuOpen"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="5" r="1.5" fill="currentColor"></circle>
-                            <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
-                            <circle cx="12" cy="19" r="1.5" fill="currentColor"></circle>
+                            stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="5" cy="12" r="1.25" fill="currentColor" stroke="none"></circle>
+                            <circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"></circle>
+                            <circle cx="19" cy="12" r="1.25" fill="currentColor" stroke="none"></circle>
                         </svg>
                     </button>
                     <div v-if="headerMenuOpen" class="app-sidebar-menu-panel">
                         <router-link to="/search" class="app-sidebar-menu-item" @click="closeHeaderMenu">
                             <span class="app-sidebar-menu-icon" aria-hidden="true">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="11" cy="11" r="7"></circle>
-                                    <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+                                    <path d="M20 20L16.5 16.5"></path>
                                 </svg>
                             </span>
                             <span class="app-sidebar-menu-label">搜索</span>
                         </router-link>
                         <router-link to="/topics" class="app-sidebar-menu-item" @click="closeHeaderMenu">
                             <span class="app-sidebar-menu-icon" aria-hidden="true">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M4 9h16"></path>
-                                    <path d="M4 15h16"></path>
-                                    <path d="M10 3L8 21"></path>
-                                    <path d="M16 3l-2 18"></path>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 9H20"></path>
+                                    <path d="M4 15H14"></path>
+                                    <path d="M4 5H20"></path>
                                 </svg>
                             </span>
                             <span class="app-sidebar-menu-label">话题</span>
@@ -72,11 +73,11 @@
                             @click="onLoginClick"
                         >
                             <span class="app-sidebar-menu-icon" aria-hidden="true">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                                    <polyline points="10 17 15 12 10 7"></polyline>
-                                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H15"></path>
+                                    <path d="M10 17L15 12L10 7"></path>
+                                    <path d="M15 12H3"></path>
                                 </svg>
                             </span>
                             <span class="app-sidebar-menu-label">登录</span>
@@ -88,11 +89,11 @@
                             @click="onLogoutClick"
                         >
                             <span class="app-sidebar-menu-icon" aria-hidden="true">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H9"></path>
+                                    <path d="M16 17L21 12L16 7"></path>
+                                    <path d="M21 12H9"></path>
                                 </svg>
                             </span>
                             <span class="app-sidebar-menu-label">退出登录</span>
@@ -567,9 +568,9 @@ export default {
     top: calc(100% + 6px);
     right: 0;
     z-index: 30;
-    min-width: 156px;
-    padding: 6px;
-    border-radius: 10px;
+    min-width: 132px;
+    padding: 5px;
+    border-radius: 8px;
     background: var(--bg-white);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-md);
@@ -577,18 +578,18 @@ export default {
 
 .app-sidebar-menu-divider {
     height: 1px;
-    margin: 4px 6px;
+    margin: 3px 4px;
     background: var(--border-subtle);
 }
 
 .app-sidebar-menu-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 9px;
     width: 100%;
-    padding: 7px 8px;
+    padding: 8px 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     background: transparent;
     color: var(--text-primary);
     font-size: 13px;
@@ -604,27 +605,25 @@ export default {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
-    color: var(--text-secondary);
-    background: var(--bg-card);
-    transition: color 0.15s ease, background 0.15s ease;
+    width: 16px;
+    height: 16px;
+    color: var(--text-tertiary);
+    transition: color 0.15s ease;
 }
 
 .app-sidebar-menu-label {
     flex: 1;
     min-width: 0;
-    line-height: 1.3;
+    line-height: 1.35;
 }
 
 .app-sidebar-menu-item:hover {
     background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .app-sidebar-menu-item:hover .app-sidebar-menu-icon {
     color: var(--primary);
-    background: var(--primary-light);
 }
 
 .app-sidebar-menu-item--danger {
@@ -633,16 +632,15 @@ export default {
 
 .app-sidebar-menu-item--danger .app-sidebar-menu-icon {
     color: #dc2626;
-    background: #fef2f2;
 }
 
 .app-sidebar-menu-item--danger:hover {
     background: #fef2f2;
+    color: #b91c1c;
 }
 
 .app-sidebar-menu-item--danger:hover .app-sidebar-menu-icon {
     color: #b91c1c;
-    background: #fee2e2;
 }
 
 .app-sidebar-icon-btn {
