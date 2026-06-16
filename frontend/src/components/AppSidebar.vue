@@ -200,7 +200,7 @@ import {
     editorState,
     getArticleStatusClass,
 } from '@/utils/articleEditorState'
-import { articleViewState, hideArticleToc, setActiveHeading } from '@/utils/articleViewState'
+import { articleViewState, hideArticleToc, setActiveHeading, showArticleTocMode } from '@/utils/articleViewState'
 import { applyHeadingHighlight, createHeadingObserver, scrollToArticleHeading } from '@/utils/articleTocNav'
 import { authState, clearSession, isAuthenticated } from '@/utils/authSession'
 import { clearLocalDraft, hasLocalDraft } from '@/utils/editorDraft'
@@ -242,7 +242,11 @@ export default {
     },
     computed: {
         showArticleToc() {
-            return this.$route.name === 'public-article' && articleViewState.inDetail
+            return (
+                this.$route.name === 'public-article'
+                && !editorState.inEditor
+                && !articleViewState.tocSuppressed
+            )
         },
         isLoggedIn() {
             void authState.token
@@ -290,9 +294,16 @@ export default {
         },
     },
     watch: {
-        '$route'() {
+        '$route'(to, from) {
             this.syncActiveTitle()
             this.headerMenuOpen = false
+            if (to.name === 'public-article') {
+                const toTitle = routeTitleParam(to)
+                const fromTitle = from ? routeTitleParam(from) : null
+                if (toTitle !== fromTitle) {
+                    showArticleTocMode()
+                }
+            }
         },
         showArticleToc(val) {
             if (val) {

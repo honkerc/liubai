@@ -275,7 +275,7 @@ import {
     notifySidebarRefresh,
     syncEditorState,
 } from '@/utils/articleEditorState'
-import { clearArticleView, syncArticleHeadings } from '@/utils/articleViewState'
+import { clearArticleView, resetArticleHeadings, syncArticleHeadings } from '@/utils/articleViewState'
 import { authState, isAuthenticated } from '@/utils/authSession'
 import { buildUploadMarkdown, UPLOAD_ACCEPT } from '@/utils/uploadMarkdown'
 import { enhanceMarkdownVideos } from '@/utils/enhanceMarkdownVideos'
@@ -596,7 +596,7 @@ export default {
 
             if (this.$route.name !== 'public-article') return
 
-            clearArticleView()
+            resetArticleHeadings()
             this.bodyEditMode = false
             this.loadError = null
 

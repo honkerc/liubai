@@ -3,25 +3,35 @@ import { extractHeadingsFromMarkdown } from '@/utils/extractHeadings'
 import { applyHeadingHighlight } from '@/utils/articleTocNav'
 
 export const articleViewState = reactive({
-    inDetail: false,
+    /** 用户在详情页主动切回文章列表时为 true */
+    tocSuppressed: false,
     title: '',
     headings: [],
     activeHeadingId: '',
 })
 
 export function syncArticleHeadings(content, title = '') {
-    articleViewState.inDetail = true
     if (title) articleViewState.title = title
     articleViewState.headings = extractHeadingsFromMarkdown(content || '')
 }
 
+export function showArticleTocMode() {
+    articleViewState.tocSuppressed = false
+}
+
 export function hideArticleToc() {
-    articleViewState.inDetail = false
+    articleViewState.tocSuppressed = true
+    applyHeadingHighlight('')
+}
+
+export function resetArticleHeadings() {
+    articleViewState.headings = []
+    articleViewState.activeHeadingId = ''
     applyHeadingHighlight('')
 }
 
 export function clearArticleView() {
-    articleViewState.inDetail = false
+    articleViewState.tocSuppressed = false
     articleViewState.title = ''
     articleViewState.headings = []
     articleViewState.activeHeadingId = ''
