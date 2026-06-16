@@ -524,6 +524,13 @@ nav a.router-link-exact-active {
     color: #abb2bf;
 }
 
+/* 覆盖 highlight.js 主题内 pre code.hljs { padding: 1em } */
+.markdown-body pre code.hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 0;
+}
+
 .markdown-body pre::before {
     content: attr(data-language);
     position: absolute;

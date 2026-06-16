@@ -84,12 +84,28 @@ sudo -u www-data /www/liubai/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 
 4. **数据目录权限**（`DATA_DIR=/www/liubai` 时）：
 
 ```bash
+# 推荐：一键设置（clay 可部署，www-data 可写上传/数据库）
+sudo DEPLOY_USER=clay ./scripts/set-permissions.sh
+```
+
+脚本会：
+- 项目代码归部署用户（`clay`），`.env` 为 `600`，可直接编辑
+- `uploads/`、数据库归 `www-data`，目录 `775`、库文件 `664`
+- 将部署用户加入 `www-data` 组
+
+手动设置（等价逻辑）：
+
+```bash
 sudo mkdir -p /www/liubai/uploads
+sudo chown -R clay:clay /www/liubai
+sudo find /www/liubai -type d -exec chmod 755 {} +
+sudo find /www/liubai -type f -exec chmod 644 {} +
+sudo chmod 600 /www/liubai/backend/.env
 sudo chown -R www-data:www-data /www/liubai/uploads
+sudo chmod 775 /www/liubai/uploads
 sudo chown www-data:www-data /www/liubai/db.sqlite3 2>/dev/null || true
-# 若库尚未创建，需让 www-data 能在 /www/liubai 下建库：
-sudo chgrp www-data /www/liubai
-sudo chmod 775 /www/liubai
+sudo usermod -aG www-data clay
+# 重新登录 SSH 后 id 应含 www-data
 ```
 
 5. **启用并重启**：
@@ -119,7 +135,38 @@ python start.py
 
 ## 环境变量
 
-见 `backend/.env.example`。Nginx 部署时 `DATA_DIR=/www/liubai`、`UPLOAD_DIR=/www/liubai/uploads`（Nginx `location /uploads/` 的 `alias` 需与此一致），`SERVE_STATIC=false`。
+见 `backend/.env.example`。Nginx 部署时 `DATA_DIR=/www/liubai`、`UPLOAD_DIR=/www/liubai/uploads`（Nginx `location ^~ /uploads/` 的 `alias` 需与此一致），`SERVE_STATIC=false`。
+
+### 上传图片 404 / 403
+
+一键修复（统一目录、迁移旧文件、修正 Nginx）：
+
+```bash
+cd /www/liubai
+git pull origin master
+sudo chmod +x scripts/fix-production-uploads.sh
+sudo DEPLOY_USER=clay ./scripts/fix-production-uploads.sh
+cd frontend && npm run build
+```
+
+手动排查要点：
+
+1. **Nginx 正则抢匹配**：
+
+```nginx
+location ^~ /uploads/ {
+    alias /www/liubai/uploads/;
+}
+```
+
+2. **路径不一致**：后端实际写入目录须与 Nginx `alias` 相同。在服务器上核对：
+
+```bash
+grep -E 'DATA_DIR|UPLOAD_DIR' /www/liubai/backend/.env
+find /www/liubai -name 'a73ba999af1944daa7bf507974645e31.jpg'
+```
+
+若文件在 `backend/uploads/` 而 Nginx 指向 `/www/liubai/uploads/`，要么改 `.env` 并迁移文件，要么改 Nginx `alias` 为 `/www/liubai/backend/uploads/`。
 
 ## 上线检查
 

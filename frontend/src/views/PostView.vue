@@ -281,7 +281,6 @@ import { classifyLoadError } from '@/utils/apiError'
 import SkeletonArticleDetail from '@/components/state/SkeletonArticleDetail.vue'
 import EmptyState from '@/components/state/EmptyState.vue'
 import ErrorState from '@/components/state/ErrorState.vue'
-import 'highlight.js/styles/atom-one-dark.css'
 
 export default {
     name: 'PostView',

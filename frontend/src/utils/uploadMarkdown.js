@@ -1,6 +1,6 @@
 /** 根据上传结果生成 Markdown / HTML 片段 */
 export function buildUploadMarkdown(res, filename = '') {
-    const url = res.compressed_url || res.url
+    const url = (res.compressed_url || res.url || '').replace(/\/+$/, '')
     const name = filename || res.filename || '文件'
     const base = name.replace(/\.[^.]+$/, '') || name
 
