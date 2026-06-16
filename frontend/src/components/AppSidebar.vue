@@ -1,6 +1,18 @@
 <template>
     <aside class="app-sidebar" :class="{ open: open }">
         <div class="app-sidebar-header">
+            <button
+                v-if="showArticleToc"
+                type="button"
+                class="app-sidebar-back-btn"
+                title="返回文章列表"
+                @click="goArticleList"
+            >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
             <SiteBrandLink />
             <div class="app-sidebar-header-actions">
                 <button
@@ -59,10 +71,8 @@
         <div class="app-sidebar-list">
             <ArticleToc
                 v-if="showArticleToc"
-                :title="articleViewState.title"
                 :headings="articleViewState.headings"
                 :active-id="articleViewState.activeHeadingId"
-                @back="goArticleList"
                 @select="scrollToHeading"
             />
             <template v-else>
@@ -157,6 +167,7 @@ import {
     getArticleStatusClass,
 } from '@/utils/articleEditorState'
 import { articleViewState, hideArticleToc, setActiveHeading } from '@/utils/articleViewState'
+import { applyHeadingHighlight, createHeadingObserver, scrollToArticleHeading } from '@/utils/articleTocNav'
 import { authState, clearSession, isAuthenticated } from '@/utils/authSession'
 import { clearLocalDraft, hasLocalDraft } from '@/utils/editorDraft'
 import SiteBrandLink from '@/components/SiteBrandLink.vue'
@@ -249,6 +260,19 @@ export default {
             this.syncActiveTitle()
             this.headerMenuOpen = false
         },
+        showArticleToc(val) {
+            if (val) {
+                this.$nextTick(() => this.bindHeadingObserver())
+            } else {
+                this.unbindHeadingObserver()
+                applyHeadingHighlight('')
+            }
+        },
+        'articleViewState.headings'() {
+            if (this.showArticleToc) {
+                this.$nextTick(() => this.bindHeadingObserver())
+            }
+        },
     },
     mounted() {
         this.loadArticles()
@@ -261,6 +285,8 @@ export default {
     beforeUnmount() {
         window.removeEventListener('sidebar-articles-refresh', this._onRefresh)
         window.removeEventListener('auth-changed', this._onAuthChanged)
+        this.unbindHeadingObserver()
+        applyHeadingHighlight('')
     },
     methods: {
         closeHeaderMenu() {
@@ -432,12 +458,21 @@ export default {
         goArticleList() {
             hideArticleToc()
         },
+        bindHeadingObserver() {
+            this.unbindHeadingObserver()
+            this._headingObserver = createHeadingObserver((id) => {
+                setActiveHeading(id)
+            })
+        },
+        unbindHeadingObserver() {
+            if (this._headingObserver) {
+                this._headingObserver.disconnect()
+                this._headingObserver = null
+            }
+        },
         scrollToHeading(id) {
             if (!id) return
-            const root = document.querySelector('.layout-right-body')
-            const el = root?.querySelector(`#${CSS.escape(id)}`)
-            if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            if (scrollToArticleHeading(id)) {
                 setActiveHeading(id)
             }
             if (window.matchMedia('(max-width: 768px)').matches) {
@@ -472,10 +507,33 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 6px;
     padding: 10px 12px;
     flex-shrink: 0;
     min-width: 0;
+}
+
+.app-sidebar-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-left: -4px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    transition: color 0.15s, background 0.15s;
+}
+
+.app-sidebar-back-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .app-sidebar-header :deep(.site-brand) {

@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import { extractHeadingsFromMarkdown } from '@/utils/extractHeadings'
+import { applyHeadingHighlight } from '@/utils/articleTocNav'
 
 export const articleViewState = reactive({
     inDetail: false,
@@ -16,6 +17,7 @@ export function syncArticleHeadings(content, title = '') {
 
 export function hideArticleToc() {
     articleViewState.inDetail = false
+    applyHeadingHighlight('')
 }
 
 export function clearArticleView() {
@@ -23,8 +25,10 @@ export function clearArticleView() {
     articleViewState.title = ''
     articleViewState.headings = []
     articleViewState.activeHeadingId = ''
+    applyHeadingHighlight('')
 }
 
 export function setActiveHeading(id) {
     articleViewState.activeHeadingId = id || ''
+    applyHeadingHighlight(id)
 }

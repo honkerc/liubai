@@ -392,6 +392,25 @@ nav a.router-link-exact-active {
     word-break: break-word;
 }
 
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+    scroll-margin-top: 72px;
+    transition: color 0.2s ease;
+}
+
+.markdown-body h1.detail-heading-active,
+.markdown-body h2.detail-heading-active,
+.markdown-body h3.detail-heading-active,
+.markdown-body h4.detail-heading-active,
+.markdown-body h5.detail-heading-active,
+.markdown-body h6.detail-heading-active {
+    color: var(--primary);
+}
+
 .markdown-body h1 {
     font-size: 26px;
     font-weight: 800;
