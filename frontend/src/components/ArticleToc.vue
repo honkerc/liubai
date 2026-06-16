@@ -28,7 +28,6 @@ export default {
     },
     emits: ['select'],
     computed: {
-        /** 仅展示一级、二级标题，保持目录简约 */
         displayHeadings() {
             const primary = this.headings.filter((h) => h.level <= 2)
             if (primary.length > 0) return primary
@@ -44,13 +43,13 @@ export default {
     flex-direction: column;
     height: 100%;
     min-height: 0;
-    padding: 8px 0 12px;
+    padding: 4px 0 8px;
 }
 
 .article-toc-nav {
     flex: 1;
     overflow-y: auto;
-    padding: 4px 12px 8px 8px;
+    padding: 2px 10px 6px;
     scrollbar-width: none;
 }
 
@@ -65,15 +64,14 @@ export default {
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    font-size: 15px;
-    line-height: 1.5;
-    padding: 10px 12px 10px 14px;
-    margin: 2px 0;
-    border-radius: 6px;
-    border-left: 3px solid transparent;
+    font-size: 14px;
+    line-height: 1.35;
+    padding: 5px 8px;
+    margin: 1px 0;
+    border-radius: 4px;
     cursor: pointer;
     font-family: inherit;
-    transition: color 0.15s, border-color 0.15s;
+    transition: color 0.15s, background 0.15s;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -84,30 +82,43 @@ export default {
 }
 
 .article-toc-item.active {
-    color: var(--text-primary);
+    color: var(--primary);
+    background: var(--primary-light);
     font-weight: 500;
-    border-left-color: var(--primary);
 }
 
 .article-toc-item.level-1 {
-    padding-left: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
 .article-toc-item.level-2 {
-    padding-left: 26px;
-    font-size: 14px;
+    padding-left: 20px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+}
+
+.article-toc-item.level-2:hover {
+    color: var(--text-secondary);
+}
+
+.article-toc-item.level-2.active {
+    color: var(--primary);
 }
 
 .article-toc-item.level-3 {
-    padding-left: 38px;
-    font-size: 14px;
+    padding-left: 32px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-tertiary);
 }
 
 .article-toc-empty {
     margin: 0;
-    padding: 16px 20px;
-    font-size: 14px;
+    padding: 12px 16px;
+    font-size: 13px;
     color: var(--text-tertiary);
-    line-height: 1.6;
+    line-height: 1.5;
 }
 </style>

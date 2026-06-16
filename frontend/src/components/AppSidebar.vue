@@ -1,18 +1,6 @@
 <template>
     <aside class="app-sidebar" :class="{ open: open }">
         <div class="app-sidebar-header">
-            <button
-                v-if="showArticleToc"
-                type="button"
-                class="app-sidebar-back-btn"
-                title="返回文章列表"
-                @click="goArticleList"
-            >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-            </button>
             <SiteBrandLink />
             <div class="app-sidebar-header-actions">
                 <button
@@ -25,6 +13,18 @@
                         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+                <button
+                    v-if="showArticleToc"
+                    type="button"
+                    class="app-sidebar-icon-btn"
+                    title="返回文章列表"
+                    @click="goArticleList"
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
                 </button>
                 <div class="app-sidebar-menu" v-click-outside="closeHeaderMenu">
@@ -511,29 +511,6 @@ export default {
     padding: 10px 12px;
     flex-shrink: 0;
     min-width: 0;
-}
-
-.app-sidebar-back-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    margin-left: -4px;
-    flex-shrink: 0;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    padding: 0;
-    font-family: inherit;
-    transition: color 0.15s, background 0.15s;
-}
-
-.app-sidebar-back-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
 }
 
 .app-sidebar-header :deep(.site-brand) {
