@@ -6,6 +6,7 @@
                 <div class="article-list-item__title">
                     <slot>{{ title }}</slot>
                 </div>
+                <span v-if="topic" class="article-list-item__topic">#{{ topic }}</span>
                 <time v-if="date" class="article-list-item__date">{{ date }}</time>
             </div>
             <div v-if="desc" class="article-list-item__desc" v-html="desc"></div>
@@ -21,6 +22,7 @@ export default {
         date: { type: String, default: '' },
         desc: { type: String, default: '' },
         index: { type: [Number, String], default: null },
+        topic: { type: String, default: '' },
     },
     emits: ['click'],
 }
@@ -76,6 +78,16 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.article-list-item__topic {
+    flex-shrink: 0;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--text-tertiary);
 }
 
 .article-list-item__desc {
