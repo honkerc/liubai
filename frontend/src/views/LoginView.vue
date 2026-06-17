@@ -1,5 +1,15 @@
 <template>
-    <div class="login-wrapper">
+    <div class="login-wrapper" :class="{ 'login-wrapper--page': isStandalone }">
+        <header v-if="isStandalone" class="login-page-top">
+            <router-link to="/" class="login-page-home">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                返回首页
+            </router-link>
+        </header>
+
         <div class="login-card">
             <button
                 v-if="!isStandalone"
@@ -15,12 +25,16 @@
                 </svg>
             </button>
 
-            <div class="login-brand">
+            <div v-if="expired" class="login-notice" role="status">
+                登录已过期，请重新登录
+            </div>
+
+            <div class="login-brand" :class="{ 'login-brand--page': isStandalone }">
                 <img class="login-brand__logo" :src="siteLogo" alt="" width="28" height="28" />
                 <div class="login-brand__text">
-                    <h2 class="login-title">{{ siteName }}</h2>
+                    <h1 class="login-title">{{ siteName }}</h1>
                     <p class="login-subtitle">
-                        {{ expired ? '登录已过期，请重新登录' : '登录后继续写作与管理' }}
+                        {{ isStandalone ? siteTagline : (expired ? '请重新登录后继续' : '登录后继续写作与管理') }}
                     </p>
                 </div>
             </div>
@@ -52,15 +66,13 @@
                     {{ loading ? '登录中…' : '登录' }}
                 </button>
             </form>
-
-            <router-link v-if="isStandalone" to="/" class="login-back">返回首页</router-link>
         </div>
     </div>
 </template>
 
 <script>
 import { authApi } from '@/api'
-import { SITE_NAME, SITE_LOGO } from '@/constants/brand'
+import { SITE_NAME, SITE_LOGO, SITE_TAGLINE } from '@/constants/brand'
 import { setToken } from '@/utils/authSession'
 
 export default {
@@ -85,6 +97,9 @@ export default {
         },
         siteLogo() {
             return SITE_LOGO
+        },
+        siteTagline() {
+            return SITE_TAGLINE
         },
     },
     mounted() {
@@ -131,15 +146,55 @@ export default {
     box-sizing: border-box;
 }
 
+.login-wrapper--page {
+    position: relative;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    min-height: 100%;
+    padding: 24px 16px;
+    background: var(--bg-body);
+}
+
+.login-page-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px;
+}
+
+.login-page-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.login-page-home:hover {
+    color: var(--primary);
+}
+
 .login-card {
     position: relative;
     width: 100%;
     max-width: 360px;
+    margin: 0 auto;
     padding: 28px 24px 24px;
     background: var(--bg-white);
     border: 1px solid var(--border-card);
     border-radius: 10px;
     box-shadow: var(--shadow-md);
+}
+
+.login-wrapper--page .login-card {
+    max-width: 400px;
+    padding: 32px 28px 28px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
 }
 
 .login-close {
@@ -165,6 +220,17 @@ export default {
     background: var(--bg-hover);
 }
 
+.login-notice {
+    margin: -4px 0 16px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #b45309;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    line-height: 1.4;
+}
+
 .login-brand {
     display: flex;
     align-items: center;
@@ -173,11 +239,24 @@ export default {
     padding-right: 24px;
 }
 
+.login-brand--page {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-right: 0;
+    margin-bottom: 28px;
+}
+
 .login-brand__logo {
     flex-shrink: 0;
     width: 28px;
     height: 28px;
     object-fit: contain;
+}
+
+.login-brand--page .login-brand__logo {
+    width: 40px;
+    height: 40px;
 }
 
 .login-brand__text {
@@ -192,11 +271,21 @@ export default {
     letter-spacing: -0.02em;
 }
 
+.login-brand--page .login-title {
+    margin-top: 12px;
+    font-size: 24px;
+}
+
 .login-subtitle {
     margin: 0;
     font-size: 13px;
     color: var(--text-tertiary);
     line-height: 1.45;
+}
+
+.login-brand--page .login-subtitle {
+    margin-top: 4px;
+    font-size: 14px;
 }
 
 .login-form {
@@ -271,22 +360,22 @@ export default {
     cursor: not-allowed;
 }
 
-.login-back {
-    display: inline-block;
-    margin-top: 16px;
-    font-size: 13px;
-    color: var(--text-tertiary);
-    text-decoration: none;
-    transition: color 0.15s;
-}
-
-.login-back:hover {
-    color: var(--primary);
-}
-
 @media (max-width: 768px) {
-    .login-card {
+    .login-wrapper--page {
+        padding: 20px 12px;
+    }
+
+    .login-page-top {
+        padding: 12px 14px;
+    }
+
+    .login-card,
+    .login-wrapper--page .login-card {
         padding: 24px 20px 20px;
+    }
+
+    .login-brand--page .login-title {
+        font-size: 22px;
     }
 }
 </style>
