@@ -136,25 +136,24 @@ export default {
     transition: opacity 0.18s ease, height 0.18s ease;
 }
 
-.article-toc-item.level-1:hover:not(.active) {
+.article-toc-item.level-1:hover:not(.active),
+.article-toc-item.level-1.active {
     background: var(--toc-hover-bg);
     border-color: var(--border-subtle);
+    color: var(--text-primary);
 }
 
-.article-toc-item.level-1:hover:not(.active) .article-toc-level1-bar {
+.article-toc-item.level-1:hover:not(.active) .article-toc-level1-bar,
+.article-toc-item.level-1.active .article-toc-level1-bar {
     opacity: 0.85;
 }
 
 .article-toc-item.level-1.active {
-    color: var(--primary);
-    background: linear-gradient(90deg, var(--primary-light) 0%, rgba(238, 241, 255, 0.35) 72%, transparent 100%);
-    border-color: rgba(79, 110, 247, 0.18);
-    box-shadow: inset 3px 0 0 var(--primary);
+    font-weight: 600;
 }
 
 .article-toc-item.level-1.active .article-toc-level1-bar {
-    opacity: 1;
-    height: 18px;
+    height: 16px;
 }
 
 /* 二三级：树形导轨 */
@@ -188,7 +187,7 @@ export default {
     width: 8px;
     height: 8px;
     border-radius: 2px;
-    border: 1.5px solid var(--border-color);
+    border: 1.5px solid var(--text-tertiary);
     background: var(--bg-white);
     transform: rotate(45deg);
 }
@@ -201,7 +200,7 @@ export default {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--border-color);
+    background: var(--text-tertiary);
     box-shadow: 0 0 0 3px var(--bg-white);
 }
 
@@ -219,13 +218,13 @@ export default {
     padding: 7px 10px 7px 20px;
     font-size: 13px;
     font-weight: 400;
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     border-radius: 6px;
 }
 
 .article-toc-item.level-2:hover:not(.active),
 .article-toc-item.level-3:hover:not(.active) {
-    color: var(--toc-item-hover-color);
+    color: var(--text-primary);
     background: var(--toc-hover-bg);
 }
 
@@ -239,27 +238,22 @@ export default {
     box-shadow: 0 0 0 3px var(--primary-light);
 }
 
-.article-toc-item.level-2.active {
-    color: var(--primary);
+.article-toc-item.level-2.active,
+.article-toc-item.level-3.active {
+    color: var(--text-primary);
     font-weight: 500;
-    background: linear-gradient(90deg, rgba(238, 241, 255, 0.95) 0%, rgba(238, 241, 255, 0.25) 100%);
+    background: var(--toc-hover-bg);
 }
 
 .article-toc-item.level-2.active .article-toc-rail-node {
-    border-color: var(--primary);
-    background: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-light);
-}
-
-.article-toc-item.level-3.active {
-    color: var(--primary);
-    font-weight: 500;
-    background: linear-gradient(90deg, rgba(238, 241, 255, 0.75) 0%, transparent 100%);
+    border-color: var(--text-secondary);
+    background: var(--bg-white);
+    box-shadow: none;
 }
 
 .article-toc-item.level-3.active .article-toc-rail-node {
-    background: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-light);
+    background: var(--text-secondary);
+    box-shadow: 0 0 0 3px var(--bg-white);
 }
 
 .article-toc-empty {

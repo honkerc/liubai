@@ -23,10 +23,8 @@
                     @click="goArticleList"
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 18V6"></path>
-                        <path d="M11 12H3"></path>
-                        <path d="M7 8L3 12L7 16"></path>
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
                 </button>
                 <div class="app-sidebar-menu" v-click-outside="closeHeaderMenu">
