@@ -105,7 +105,7 @@
 
                         <div
                             v-else
-                            class="detail-content markdown-body detail-content-preview detail-content-preview--clickable"
+                            class="detail-content markdown-body detail-content-prose detail-content-preview detail-content-preview--clickable"
                             v-html="renderedHtml || emptyContentHtml"
                             title="点击正文进入编辑"
                             @click="onPreviewClick"
@@ -127,7 +127,7 @@
                                 >#{{ article.topic }}</router-link>
                             </p>
                         </div>
-                        <div class="detail-content markdown-body" v-html="renderedContent"></div>
+                        <div class="detail-content markdown-body detail-content-prose" v-html="renderedContent"></div>
                     </article>
                 </div>
                 <SkeletonArticleDetail v-else-if="loading" />
@@ -1199,6 +1199,159 @@ export default {
     line-height: 1.85;
 }
 
+/* 正文阅读：仅修饰 markdown 正文，不改 header / 代码块 */
+.detail-content-prose {
+    max-width: 680px;
+    padding-top: 2px;
+    font-size: 16.5px;
+    line-height: 1.9;
+    letter-spacing: 0.01em;
+}
+
+.detail-content-prose :deep(h1:first-child),
+.detail-content-prose :deep(h2:first-child),
+.detail-content-prose :deep(h3:first-child),
+.detail-content-prose :deep(p:first-child) {
+    margin-top: 0;
+}
+
+.detail-content-prose :deep(h2),
+.detail-content-prose :deep(h3) {
+    position: relative;
+    padding-left: 14px;
+}
+
+.detail-content-prose :deep(h2)::before,
+.detail-content-prose :deep(h3)::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.42em;
+    width: 3px;
+    height: calc(100% - 0.84em);
+    min-height: 14px;
+    max-height: 22px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--primary) 0%, rgba(79, 110, 247, 0.28) 100%);
+    opacity: 0.65;
+}
+
+.detail-content-prose :deep(h3)::before {
+    width: 2px;
+    opacity: 0.45;
+}
+
+.detail-content-prose :deep(p) {
+    margin-bottom: 1.15em;
+    color: var(--text-secondary);
+}
+
+.detail-content-prose :deep(p + p) {
+    margin-top: -0.15em;
+}
+
+.detail-content-prose :deep(strong) {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.detail-content-prose :deep(a) {
+    font-weight: 500;
+    border-bottom: 1px solid rgba(79, 110, 247, 0.25);
+}
+
+.detail-content-prose :deep(a:hover) {
+    border-bottom-color: var(--primary);
+}
+
+.detail-content-prose :deep(ul),
+.detail-content-prose :deep(ol) {
+    margin: 0 0 1.35em;
+    padding-left: 1.35em;
+}
+
+.detail-content-prose :deep(ul > li) {
+    margin-bottom: 0.55em;
+    padding-left: 0.35em;
+}
+
+.detail-content-prose :deep(ul > li::marker) {
+    color: rgba(79, 110, 247, 0.55);
+}
+
+.detail-content-prose :deep(ol > li::marker) {
+    color: var(--text-tertiary);
+    font-weight: 600;
+    font-size: 0.92em;
+}
+
+.detail-content-prose :deep(blockquote) {
+    margin: 1.6em 0;
+    padding: 16px 20px 16px 22px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-hover) 100%);
+    border: 1px solid var(--border-subtle);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.detail-content-prose :deep(blockquote::before) {
+    width: 3px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--primary) 0%, rgba(79, 110, 247, 0.2) 100%);
+}
+
+.detail-content-prose :deep(blockquote p) {
+    font-style: normal;
+    line-height: 1.85;
+}
+
+.detail-content-prose :deep(hr) {
+    width: 100%;
+    max-width: 96px;
+    height: 1px;
+    margin: 2.2em 0;
+    background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+    border: none;
+    border-radius: 0;
+}
+
+.detail-content-prose :deep(table) {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 1px 2px rgba(31, 35, 41, 0.04);
+}
+
+.detail-content-prose :deep(th) {
+    background: var(--bg-card);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+}
+
+.detail-content-prose :deep(td) {
+    background: var(--bg-white);
+}
+
+.detail-content-prose :deep(tr:nth-child(even) td) {
+    background: var(--bg-hover);
+}
+
+.detail-content-prose :deep(img) {
+    margin: 1.6em 0;
+    border-radius: 10px;
+    border-color: var(--border-subtle);
+    box-shadow:
+        0 1px 2px rgba(31, 35, 41, 0.04),
+        0 8px 24px rgba(31, 35, 41, 0.06);
+}
+
+.detail-content-prose :deep(li.task-list-item input[type="checkbox"]) {
+    margin-top: 0.35em;
+    width: 15px;
+    height: 15px;
+    accent-color: var(--primary);
+}
+
 .detail-content-preview {
     cursor: default;
 }
@@ -1541,6 +1694,17 @@ a.detail-topic-tag:hover {
 
     .detail-content :deep(.detail-content-empty) {
         font-size: 15px;
+    }
+
+    .detail-content-prose {
+        max-width: none;
+        font-size: 15px;
+        line-height: 1.85;
+    }
+
+    .detail-content-prose :deep(h2),
+    .detail-content-prose :deep(h3) {
+        padding-left: 12px;
     }
 
     .detail-loading,
