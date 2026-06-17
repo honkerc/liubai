@@ -116,9 +116,10 @@
 
             <!-- 未登录：只读详情 -->
             <template v-else>
-                <div class="detail-container" v-if="article">
+                <div class="detail-container detail-container--read" v-if="article">
                     <article class="detail-article">
-                        <div class="detail-header">
+                        <header class="detail-header">
+                            <p v-if="article.created_at" class="detail-meta">{{ formatArticleDate(article.created_at) }}</p>
                             <h1 class="detail-title">{{ article.title }}</h1>
                             <p v-if="article.topic" class="detail-subtitle">
                                 <router-link
@@ -126,8 +127,9 @@
                                     class="detail-topic-tag"
                                 >#{{ article.topic }}</router-link>
                             </p>
-                        </div>
-                        <div class="detail-content markdown-body" v-html="renderedContent"></div>
+                            <div class="detail-header-rule" aria-hidden="true"></div>
+                        </header>
+                        <div class="detail-content markdown-body detail-content--read" v-html="renderedContent"></div>
                     </article>
                 </div>
                 <SkeletonArticleDetail v-else-if="loading" />
@@ -533,6 +535,12 @@ export default {
         },
         renderMarkdown(content) {
             return parseMarkdown(content)
+        },
+        formatArticleDate(dateStr) {
+            if (!dateStr) return ''
+            const d = new Date(dateStr)
+            const pad = (n) => String(n).padStart(2, '0')
+            return `${d.getFullYear()}年${pad(d.getMonth() + 1)}月${pad(d.getDate())}日`
         },
         syncArticleViewFromPost() {
             if (this.$route.name !== 'public-article' || !this.article) return
@@ -1117,6 +1125,22 @@ export default {
     min-height: 100%;
 }
 
+.detail-container {
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.detail-container--read {
+    padding: 4px 0 56px;
+}
+
+.detail-container--edit {
+    max-width: 760px;
+    padding-bottom: 24px;
+}
+
 .post-view--editing .detail-wrapper {
     height: 100%;
     min-height: 0;
@@ -1127,16 +1151,47 @@ export default {
 }
 
 .detail-header {
-    margin-bottom: 28px;
+    margin-bottom: 32px;
+}
+
+.detail-meta {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.02em;
+}
+
+.detail-header-rule {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.detail-header-rule::before {
+    content: '';
+    flex-shrink: 0;
+    width: 28px;
+    height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--primary) 0%, rgba(79, 110, 247, 0.25) 100%);
+    opacity: 0.75;
+}
+
+.detail-header-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
 }
 
 .detail-title {
-    font-size: 32px;
+    font-size: 34px;
     font-weight: 800;
     color: var(--text-primary);
-    margin: 0 0 4px;
-    letter-spacing: -0.02em;
-    line-height: 1.3;
+    margin: 0 0 8px;
+    letter-spacing: -0.025em;
+    line-height: 1.28;
 }
 
 .detail-title.detail-editable {
@@ -1209,9 +1264,54 @@ export default {
 
 .detail-subtitle {
     font-size: 14px;
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     margin: 0;
-    letter-spacing: 1px;
+}
+
+.detail-container--read .detail-topic-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 13px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.detail-container--read a.detail-topic-tag:hover {
+    color: var(--primary);
+    border-color: rgba(79, 110, 247, 0.22);
+    background: var(--primary-light);
+}
+
+.detail-content--read {
+    padding-top: 2px;
+}
+
+.detail-content--read :deep(h1:first-child),
+.detail-content--read :deep(h2:first-child),
+.detail-content--read :deep(h3:first-child) {
+    margin-top: 8px;
+}
+
+.detail-content--read :deep(h2) {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.detail-content--read :deep(hr) {
+    width: 100%;
+    max-width: 120px;
+    height: 1px;
+    margin: 40px 0;
+    background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+    border: none;
+    border-radius: 0;
+}
+
+.detail-content--read :deep(img) {
+    border-radius: 10px;
 }
 
 .detail-topic-field {
@@ -1523,12 +1623,26 @@ a.detail-topic-tag:hover {
 }
 
 @media (max-width: 768px) {
+    .detail-container--read {
+        padding-bottom: 32px;
+    }
+
     .detail-header {
-        margin-bottom: 20px;
+        margin-bottom: 24px;
+    }
+
+    .detail-meta {
+        margin-bottom: 8px;
+        font-size: 12px;
+    }
+
+    .detail-header-rule {
+        margin-top: 16px;
     }
 
     .detail-title {
-        font-size: 22px;
+        font-size: 24px;
+        line-height: 1.32;
     }
 
     .detail-title.detail-editable,
