@@ -42,7 +42,7 @@
         </div>
 
         <div class="layout-overlay" v-if="showLogin" @click.self="showLogin = false">
-            <LoginView @login-success="onLoginSuccess" />
+            <LoginView @login-success="onLoginSuccess" @close="showLogin = false" />
         </div>
     </div>
 </template>
@@ -188,11 +188,14 @@ export default {
 .layout-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(2px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 200;
+    padding: 16px;
+    box-sizing: border-box;
 }
 
 @media (max-width: 768px) {

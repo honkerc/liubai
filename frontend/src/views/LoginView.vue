@@ -1,35 +1,70 @@
 <template>
     <div class="login-wrapper">
         <div class="login-card">
-            <div class="login-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
+            <button
+                v-if="!isStandalone"
+                type="button"
+                class="login-close"
+                aria-label="关闭"
+                @click="$emit('close')"
+            >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.75" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
-            </div>
-            <h2 class="login-title">欢迎回来</h2>
-            <p class="login-subtitle">{{ expired ? '登录已过期，请重新登录' : '请登录您的账号' }}</p>
-            <div class="form-group">
-                <input type="text" v-model="username" placeholder="用户名" class="form-input" />
-            </div>
-            <div class="form-group">
-                <input type="password" v-model="password" placeholder="密码" class="form-input"
-                    @keyup.enter="handleLogin" />
-            </div>
-            <div class="error-msg" v-if="error">{{ error }}</div>
-            <button class="login-btn" @click="handleLogin" :disabled="loading">
-                {{ loading ? '登录中...' : '登录' }}
             </button>
+
+            <div class="login-brand">
+                <img class="login-brand__logo" :src="siteLogo" alt="" width="28" height="28" />
+                <div class="login-brand__text">
+                    <h2 class="login-title">{{ siteName }}</h2>
+                    <p class="login-subtitle">
+                        {{ expired ? '登录已过期，请重新登录' : '登录后继续写作与管理' }}
+                    </p>
+                </div>
+            </div>
+
+            <form class="login-form" @submit.prevent="handleLogin">
+                <label class="login-field">
+                    <span class="login-field__label">用户名</span>
+                    <input
+                        ref="usernameInput"
+                        v-model="username"
+                        type="text"
+                        autocomplete="username"
+                        placeholder="请输入用户名"
+                        class="login-field__input"
+                    />
+                </label>
+                <label class="login-field">
+                    <span class="login-field__label">密码</span>
+                    <input
+                        v-model="password"
+                        type="password"
+                        autocomplete="current-password"
+                        placeholder="请输入密码"
+                        class="login-field__input"
+                    />
+                </label>
+                <p v-if="error" class="login-error" role="alert">{{ error }}</p>
+                <button type="submit" class="login-btn" :disabled="loading">
+                    {{ loading ? '登录中…' : '登录' }}
+                </button>
+            </form>
+
+            <router-link v-if="isStandalone" to="/" class="login-back">返回首页</router-link>
         </div>
     </div>
 </template>
 
 <script>
 import { authApi } from '@/api'
+import { SITE_NAME, SITE_LOGO } from '@/constants/brand'
 import { setToken } from '@/utils/authSession'
 
 export default {
+    emits: ['login-success', 'close'],
     data() {
         return {
             username: '',
@@ -42,12 +77,25 @@ export default {
         expired() {
             return this.$route.query.expired === '1'
         },
+        isStandalone() {
+            return this.$route.name === 'login'
+        },
+        siteName() {
+            return SITE_NAME
+        },
+        siteLogo() {
+            return SITE_LOGO
+        },
+    },
+    mounted() {
+        this.$nextTick(() => {
+            this.$refs.usernameInput?.focus()
+        })
     },
     methods: {
         async handleLogin() {
             if (!this.username || !this.password) {
                 this.error = '请输入用户名和密码'
-                this.$toast.info('请输入用户名和密码')
                 return
             }
             this.loading = true
@@ -57,8 +105,10 @@ export default {
                 setToken(res.access_token)
                 this.$toast.success('登录成功')
                 this.$emit('login-success')
-                const redirect = this.$route.query.redirect || '/'
-                this.$router.push(redirect)
+                if (this.isStandalone) {
+                    const redirect = this.$route.query.redirect || '/'
+                    this.$router.push(redirect)
+                }
             } catch (e) {
                 this.error = e.message || '登录失败'
                 this.$toast.error(this.error)
@@ -75,111 +125,168 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
     height: 100%;
+    padding: 16px;
+    box-sizing: border-box;
 }
 
 .login-card {
-    width: 340px;
-    padding: 40px 32px 32px;
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    padding: 28px 24px 24px;
     background: var(--bg-white);
-    border-radius: 6px;
+    border: 1px solid var(--border-card);
+    border-radius: 10px;
     box-shadow: var(--shadow-md);
-    text-align: center;
 }
 
-.login-icon {
+.login-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
     display: flex;
+    align-items: center;
     justify-content: center;
-    margin-bottom: 16px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s, background 0.15s;
 }
 
-.login-icon svg {
-    opacity: 0.6;
-    color: var(--icon-color);
+.login-close:hover {
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+}
+
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-right: 24px;
+}
+
+.login-brand__logo {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.login-brand__text {
+    min-width: 0;
 }
 
 .login-title {
-    font-size: 20px;
-    font-weight: 600;
+    margin: 0 0 2px;
+    font-size: 18px;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 4px;
+    letter-spacing: -0.02em;
 }
 
 .login-subtitle {
+    margin: 0;
     font-size: 13px;
     color: var(--text-tertiary);
-    margin-bottom: 28px;
+    line-height: 1.45;
 }
 
-.form-group {
-    margin-bottom: 14px;
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
-.form-input {
+.login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.login-field__label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.login-field__input {
     width: 100%;
-    padding: 11px 14px;
+    padding: 10px 12px;
     font-size: 14px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     outline: none;
-    transition: all 0.2s;
+    transition: border-color 0.15s, box-shadow 0.15s;
     box-sizing: border-box;
     font-family: inherit;
-    background-color: var(--bg-hover);
+    background: var(--bg-white);
     color: var(--text-primary);
 }
 
-.form-input:focus {
-    border-color: var(--primary);
-    background-color: var(--bg-white);
-    box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.08);
+.login-field__input:focus {
+    border-color: rgba(79, 110, 247, 0.45);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
-.form-input::placeholder {
+.login-field__input::placeholder {
     color: var(--text-tertiary);
 }
 
-.error-msg {
-    color: #d93025;
+.login-error {
+    margin: -2px 0 0;
     font-size: 13px;
-    margin-bottom: 12px;
-    text-align: left;
+    color: #dc2626;
+    line-height: 1.4;
 }
 
 .login-btn {
     width: 100%;
-    padding: 11px;
+    margin-top: 4px;
+    padding: 10px 12px;
     font-size: 14px;
     font-weight: 500;
-    color: #ffffff;
-    background-color: var(--text-primary);
+    color: #fff;
+    background: var(--primary);
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.15s, opacity 0.15s;
     font-family: inherit;
-    letter-spacing: 0.3px;
 }
 
-.login-btn:hover {
-    background-color: var(--text-secondary);
-}
-
-.login-btn:active {
-    transform: scale(0.98);
+.login-btn:hover:not(:disabled) {
+    background: var(--primary-hover);
 }
 
 .login-btn:disabled {
-    background-color: var(--text-tertiary);
+    opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
+}
+
+.login-back {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.login-back:hover {
+    color: var(--primary);
 }
 
 @media (max-width: 768px) {
     .login-card {
-        width: 90vw;
-        max-width: 340px;
-        padding: 32px 24px 28px;
+        padding: 24px 20px 20px;
     }
 }
 </style>
