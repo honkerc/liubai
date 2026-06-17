@@ -1,5 +1,9 @@
 <template>
-    <div class="login-wrapper" :class="{ 'login-wrapper--page': isStandalone }">
+    <div
+        class="login-wrapper"
+        :class="{ 'login-wrapper--page': isStandalone }"
+        @click.self="onBackdropClick"
+    >
         <header v-if="isStandalone" class="login-page-top">
             <router-link to="/" class="login-page-home">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -108,6 +112,13 @@ export default {
         })
     },
     methods: {
+        onBackdropClick() {
+            if (this.isStandalone) {
+                this.$router.push('/')
+                return
+            }
+            this.$emit('close')
+        },
         async handleLogin() {
             if (!this.username || !this.password) {
                 this.error = '请输入用户名和密码'
