@@ -110,11 +110,6 @@
                             title="点击正文进入编辑"
                             @click="onPreviewClick"
                         ></div>
-
-                        <ArticleCommentPanel
-                            v-if="showComments"
-                            :article-key="commentArticleKey"
-                        />
                     </article>
                 </div>
             </template>
@@ -133,11 +128,6 @@
                             </p>
                         </div>
                         <div class="detail-content markdown-body" v-html="renderedContent"></div>
-
-                        <ArticleCommentPanel
-                            v-if="showComments"
-                            :article-key="commentArticleKey"
-                        />
                     </article>
                 </div>
                 <SkeletonArticleDetail v-else-if="loading" />
@@ -293,12 +283,10 @@ import { classifyLoadError } from '@/utils/apiError'
 import SkeletonArticleDetail from '@/components/state/SkeletonArticleDetail.vue'
 import EmptyState from '@/components/state/EmptyState.vue'
 import ErrorState from '@/components/state/ErrorState.vue'
-import ArticleCommentPanel from '@/components/ArticleCommentPanel.vue'
-import { getArticleCommentKey } from '@/utils/articleComments'
 
 export default {
     name: 'PostView',
-    components: { SkeletonArticleDetail, EmptyState, ErrorState, ArticleCommentPanel },
+    components: { SkeletonArticleDetail, EmptyState, ErrorState },
     data() {
         return {
             uploadAccept: UPLOAD_ACCEPT,
@@ -387,14 +375,6 @@ export default {
         renderedHtml() {
             if (!this.rawContent.trim()) return ''
             return resolveMarkdownHtml(this.renderMarkdown(this.rawContent))
-        },
-        showComments() {
-            if (this.loading || this.loadError || this.isNewArticle || !this.article) return false
-            if (this.isEditablePage && this.bodyEditMode) return false
-            return true
-        },
-        commentArticleKey() {
-            return getArticleCommentKey(this.article)
         },
     },
     async mounted() {
