@@ -101,8 +101,29 @@ export function formatCommentTime(iso) {
     if (!iso) return ''
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return ''
+
+    const now = new Date()
+    const diffMs = now.getTime() - d.getTime()
+    const diffMin = Math.floor(diffMs / 60000)
+
+    if (diffMin < 1) return '刚刚'
+    if (diffMin < 60) return `${diffMin} 分钟前`
+
     const pad = (n) => String(n).padStart(2, '0')
-    return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+
+    const isSameDay = (a, b) =>
+        a.getFullYear() === b.getFullYear()
+        && a.getMonth() === b.getMonth()
+        && a.getDate() === b.getDate()
+
+    if (isSameDay(d, now)) return `今天 ${time}`
+
+    const yesterday = new Date(now)
+    yesterday.setDate(now.getDate() - 1)
+    if (isSameDay(d, yesterday)) return `昨天 ${time}`
+
+    return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${time}`
 }
 
 export function avatarColor(name) {
