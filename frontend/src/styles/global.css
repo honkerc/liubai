@@ -525,19 +525,28 @@ nav a.router-link-exact-active {
 }
 
 .markdown-body pre {
-    border-radius: 8px;
-    padding: 20px 24px;
-    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 40px 22px 22px;
+    margin: 24px 0;
     overflow: auto;
     position: relative;
-    background: #282c34;
-    max-height: 480px;
+    background-color: #282c34;
+    background-image:
+        radial-gradient(circle at 16px 16px, #ff5f56 4.5px, transparent 4.5px),
+        radial-gradient(circle at 32px 16px, #ffbd2e 4.5px, transparent 4.5px),
+        radial-gradient(circle at 48px 16px, #27c93f 4.5px, transparent 4.5px);
+    background-repeat: no-repeat;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.14),
+        0 8px 24px rgba(0, 0, 0, 0.1);
+    max-height: 520px;
 }
 
 .markdown-body pre code {
     font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
     font-size: 14px;
-    line-height: 1.7;
+    line-height: 1.75;
     background: none;
     padding: 0;
     color: #abb2bf;
@@ -553,13 +562,18 @@ nav a.router-link-exact-active {
 .markdown-body pre::before {
     content: attr(data-language);
     position: absolute;
-    top: 8px;
-    right: 12px;
-    font-size: 11px;
+    top: 10px;
+    right: 14px;
+    padding: 2px 8px;
+    font-size: 10px;
     font-weight: 600;
-    color: #5c6370;
+    color: #9da5b4;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.06em;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    line-height: 1.4;
 }
 
 .markdown-body code {
@@ -685,7 +699,7 @@ nav a.router-link-exact-active {
     }
 
     .markdown-body pre {
-        padding: 12px 14px;
+        padding: 36px 14px 14px;
     }
 
     .markdown-body table {
