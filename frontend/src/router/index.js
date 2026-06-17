@@ -66,6 +66,30 @@ const routes = [
 
             {
 
+                path: 'about',
+
+                name: 'about',
+
+                component: () => import('../views/AboutView.vue'),
+
+                meta: { title: '关于' },
+
+            },
+
+            {
+
+                path: 'links',
+
+                name: 'links',
+
+                component: () => import('../views/LinksView.vue'),
+
+                meta: { title: '链接' },
+
+            },
+
+            {
+
                 path: 'topic/:topic',
 
                 name: 'topic',

@@ -42,6 +42,16 @@
                         </svg>
                     </button>
                     <div v-if="headerMenuOpen" class="app-sidebar-menu-panel">
+                        <router-link :to="{ name: 'portal-home' }" class="app-sidebar-menu-item" @click="closeHeaderMenu">
+                            <span class="app-sidebar-menu-icon" aria-hidden="true">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 10.5L12 3L21 10.5"></path>
+                                    <path d="M5 10V20H19V10"></path>
+                                </svg>
+                            </span>
+                            <span class="app-sidebar-menu-label">首页</span>
+                        </router-link>
                         <router-link to="/search" class="app-sidebar-menu-item" @click="closeHeaderMenu">
                             <span class="app-sidebar-menu-icon" aria-hidden="true">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -62,6 +72,27 @@
                                 </svg>
                             </span>
                             <span class="app-sidebar-menu-label">话题</span>
+                        </router-link>
+                        <router-link :to="{ name: 'about' }" class="app-sidebar-menu-item" @click="closeHeaderMenu">
+                            <span class="app-sidebar-menu-icon" aria-hidden="true">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="9"></circle>
+                                    <path d="M12 10V16"></path>
+                                    <path d="M12 7H12.01"></path>
+                                </svg>
+                            </span>
+                            <span class="app-sidebar-menu-label">关于</span>
+                        </router-link>
+                        <router-link :to="{ name: 'links' }" class="app-sidebar-menu-item" @click="closeHeaderMenu">
+                            <span class="app-sidebar-menu-icon" aria-hidden="true">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                            </span>
+                            <span class="app-sidebar-menu-label">链接</span>
                         </router-link>
                         <div class="app-sidebar-menu-divider"></div>
                         <button
@@ -577,7 +608,9 @@ export default {
     top: calc(100% + 6px);
     right: 0;
     z-index: 30;
-    min-width: 132px;
+    min-width: 140px;
+    max-height: min(70vh, 420px);
+    overflow-y: auto;
     padding: 5px;
     border-radius: 8px;
     background: var(--bg-white);
