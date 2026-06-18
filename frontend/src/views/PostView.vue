@@ -439,6 +439,10 @@ export default {
                 this._loadedRouteTitle = ''
             }
             if (isNewArticleRoute(to) && to.query.fresh && to.query.fresh !== from?.query?.fresh) {
+                if (from?.name === 'public-article' && this.articleId) {
+                    this.captureActiveFieldValues()
+                    this.prepareLeaveArticle()
+                }
                 this.resetNewArticle()
                 return
             }
@@ -500,7 +504,7 @@ export default {
         },
         buildSavePayload(extra = {}, options = {}) {
             const payload = {
-                title: this.title.trim() || '未命名',
+                title: this.resolveSaveTitle(),
                 content: this.rawContent,
                 topic: this.topic.trim() || '',
                 is_published: this.article?.is_published ?? false,
@@ -511,6 +515,19 @@ export default {
                 payload.expected_updated_at = this.lastKnownUpdatedAt
             }
             return payload
+        },
+        resolveSaveTitle() {
+            const trimmed = this.title.trim()
+            if (trimmed) return trimmed
+            if (this.isNewArticle && !this.articleId) {
+                return this.generateDefaultTitle()
+            }
+            return '未命名'
+        },
+        generateDefaultTitle() {
+            const now = new Date()
+            const pad = (n) => String(n).padStart(2, '0')
+            return `未命名 ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`
         },
         applySaveResult(res, saveCtx = null) {
             if (!res) return
@@ -593,6 +610,37 @@ export default {
             const text = el.textContent.replace(/\n/g, '').slice(0, 200)
             this.title = text
         },
+        prepareLeaveArticle() {
+            if (this.saveTimer) {
+                clearTimeout(this.saveTimer)
+                this.saveTimer = null
+            }
+            this.activeEditField = null
+
+            if (!this.isLoggedIn || !this.articleId || !this.article) {
+                this._autoSaveSeq += 1
+                return
+            }
+
+            if (!this.title.trim() && !this.rawContent.trim()) {
+                this._autoSaveSeq += 1
+                return
+            }
+
+            const leavingArticleId = this.articleId
+            const payload = this.buildSavePayload({}, { force: false })
+            const saveSeq = ++this._autoSaveSeq
+
+            articleApi.update(leavingArticleId, payload)
+                .then(() => {
+                    if (saveSeq !== this._autoSaveSeq) return
+                    notifySidebarRefresh()
+                })
+                .catch((err) => {
+                    if (saveSeq !== this._autoSaveSeq) return
+                    console.error('Failed to save before leaving article:', err)
+                })
+        },
         prepareArticleSwitch(nextTitle) {
             if (this.saveTimer) {
                 clearTimeout(this.saveTimer)
@@ -646,6 +694,10 @@ export default {
             })
         },
         resetNewArticle() {
+            this.flushPendingSave()
+            this._autoSaveSeq += 1
+            this._loadedRouteTitle = ''
+            clearLocalDraft()
             this.activeEditField = null
             this.bodyEditMode = true
             this.articleId = null
@@ -655,6 +707,7 @@ export default {
             this.topic = ''
             this.rawContent = ''
             this.saveStatus = 'saved'
+            this.saving = false
             this.draftCreatedAt = new Date().toISOString()
             this.syncEditorStateToSidebar()
             this.$nextTick(() => {
@@ -1078,12 +1131,6 @@ export default {
                 topic: this.topic,
             })
 
-            if (!this.title.trim() && !this.articleId) {
-                this.saving = false
-                this.saveStatus = 'saved'
-                return
-            }
-
             const payload = this.buildSavePayload({}, options)
 
             const done = (res) => {
@@ -1091,11 +1138,19 @@ export default {
                 if (saveCtx.articleId && this.articleId !== saveCtx.articleId) return
                 if (saveCtx.routeTitle !== routeTitleParam(this.$route)) return
 
+                const wasCreate = !saveCtx.articleId && !!res?.id
                 this.applySaveResult(res, saveCtx)
                 this.saving = false
                 this.saveStatus = 'saved'
                 this.syncEditorStateToSidebar()
                 notifySidebarRefresh()
+                if (wasCreate && res?.title) {
+                    if (this.isNewArticle) {
+                        this.$router.replace(toArticleRoute(res.title))
+                    } else {
+                        this.syncRouteAfterTitleChange(res.title)
+                    }
+                }
                 if (options.notify) {
                     this.$toast.success('已保存')
                 } else if (!options.silent) {
@@ -1121,18 +1176,12 @@ export default {
                 articleApi.update(this.articleId, payload).then(res => {
                     if (saveCtx.seq !== this._autoSaveSeq) return
                     if (saveCtx.routeTitle !== routeTitleParam(this.$route)) return
-                    if (res?.title && this.articleId === saveCtx.articleId) {
-                        this.syncRouteAfterTitleChange(res.title)
-                    }
                     done(res)
                 }).catch(fail)
             } else {
                 articleApi.create(payload).then(res => {
                     if (saveCtx.seq !== this._autoSaveSeq) return
                     if (saveCtx.routeTitle !== routeTitleParam(this.$route)) return
-                    if (res?.title && this.articleId === saveCtx.articleId) {
-                        this.syncRouteAfterTitleChange(res.title)
-                    }
                     done(res)
                 }).catch(fail)
             }
