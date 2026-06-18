@@ -7,6 +7,21 @@ export function headingSlug(text) {
         .replace(/(^-|-$)/g, '')
 }
 
+/** 为同名标题追加 -2、-3 后缀，保证 id 唯一 */
+export function assignUniqueHeadingIds(headings) {
+    const used = {}
+    return headings.map((h) => {
+        let base = headingSlug(h.text) || 'section'
+        let id = base
+        let n = 2
+        while (used[id]) {
+            id = `${base}-${n++}`
+        }
+        used[id] = true
+        return { ...h, id }
+    })
+}
+
 /** 从 Markdown 正文提取 h1–h6 目录 */
 export function extractHeadingsFromMarkdown(content) {
     if (!content || !content.trim()) return []
@@ -19,5 +34,5 @@ export function extractHeadingsFromMarkdown(content) {
         if (!text) continue
         headings.push({ level, text, id: headingSlug(text) })
     }
-    return headings
+    return assignUniqueHeadingIds(headings)
 }

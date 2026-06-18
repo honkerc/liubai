@@ -24,7 +24,15 @@ from config import (
     STATIC_DIR,
 )
 from models import User, Article
-from schemas import ArticleCreate, ArticleUpdate, ArticleOut, ArticleSummaryOut, UploadOut
+from schemas import (
+    ArticleCreate,
+    ArticleUpdate,
+    ArticleOut,
+    ArticleSummaryOut,
+    ArticleListOut,
+    TopicOut,
+    UploadOut,
+)
 from upload_service import UPLOAD_ROOT, ensure_upload_dirs, save_upload, cleanup_uploads_if_needed
 
 
@@ -171,38 +179,63 @@ async def _save_article_fields(article: Article, *, content: str, topic: str, is
     return article
 
 
-async def _upsert_article_by_title(title: str, data: ArticleCreate, author: User) -> Article:
-    """按标题创建或更新文章，避免重复标题导致 500"""
-    existing = await Article.filter(title=title).first()
-    if existing:
-        return await _save_article_fields(
-            existing,
-            content=data.content,
-            topic=data.topic,
-            is_published=data.is_published,
-            is_pinned=data.is_pinned,
-        )
+def _build_search_snippet(content: str, keyword: str, radius: int = 50) -> str:
+    """从正文中截取包含关键词的纯文本摘要"""
+    import re
 
-    try:
-        return await Article.create(
-            author=author,
-            title=title,
-            content=data.content,
-            topic=data.topic,
-            is_published=data.is_published,
-            is_pinned=data.is_pinned,
-        )
-    except IntegrityError:
-        existing = await Article.filter(title=title).first()
-        if existing:
-            return await _save_article_fields(
-                existing,
-                content=data.content,
-                topic=data.topic,
-                is_published=data.is_published,
-                is_pinned=data.is_pinned,
-            )
-        raise HTTPException(status_code=409, detail="标题已存在")
+    text = re.sub(r"```[\s\S]*?```", " ", content or "")
+    text = re.sub(r"`[^`]+`", " ", text)
+    text = re.sub(r"!\[[^\]]*]\([^)]+\)", " ", text)
+    text = re.sub(r"\[([^\]]+)]\([^)]+\)", r"\1", text)
+    text = re.sub(r"[#>*_\-\[\]()!|~]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    if not text or not keyword:
+        return ""
+
+    lower = text.lower()
+    kw_lower = keyword.lower()
+    match_start = lower.find(kw_lower)
+    if match_start == -1:
+        return ""
+
+    match_end = match_start + len(keyword)
+    tokens = []
+    i = 0
+    while i < len(text):
+        if text[i].isspace():
+            i += 1
+            continue
+        start = i
+        if "\u4e00" <= text[i] <= "\u9fff":
+            tokens.append((start, start + 1))
+            i += 1
+            continue
+        while i < len(text) and not text[i].isspace() and not ("\u4e00" <= text[i] <= "\u9fff"):
+            i += 1
+        tokens.append((start, i))
+
+    if not tokens:
+        return ""
+
+    first_token = 0
+    for idx, (start, _end) in enumerate(tokens):
+        if _end > match_start:
+            first_token = idx
+            break
+
+    last_token = first_token
+    for idx in range(first_token, len(tokens)):
+        if tokens[idx][0] < match_end:
+            last_token = idx
+
+    from_idx = max(0, first_token - radius)
+    to_idx = min(len(tokens), last_token + 1 + radius)
+    snippet = text[tokens[from_idx][0]:tokens[to_idx - 1][1]]
+    if from_idx > 0:
+        snippet = f"…{snippet}"
+    if to_idx < len(tokens):
+        snippet = f"{snippet}…"
+    return snippet
 
 
 def _updated_at_matches(stored, expected) -> bool:
@@ -234,14 +267,14 @@ async def title_taken(title: str, exclude_id=None) -> bool:
     return await query.exists()
 
 
-@app.get("/api/articles", response_model=List[ArticleSummaryOut])
+@app.get("/api/articles", response_model=ArticleListOut)
 async def list_articles(
     search: Optional[str] = Query(None, description="搜索标题和内容"),
     topic: Optional[str] = Query(None, description="按话题筛选"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
-    """公开接口：获取已发布的文章列表（不含正文）"""
+    """公开接口：获取已发布的文章列表（不含正文；搜索时附带摘要片段）"""
     query = Article.filter(is_published=True)
 
     if search:
@@ -252,14 +285,37 @@ async def list_articles(
     if topic:
         query = query.filter(topic=topic)
 
-    articles = await (
-        query.order_by(*_article_order())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .values(*ARTICLE_SUMMARY_FIELDS)
-    )
+    total = await query.count()
+    offset = (page - 1) * page_size
 
-    return articles
+    if search:
+        rows = await (
+            query.order_by(*_article_order())
+            .offset(offset)
+            .limit(page_size)
+            .values(*ARTICLE_SUMMARY_FIELDS, "content")
+        )
+        items = []
+        for row in rows:
+            content = row.pop("content", "") or ""
+            row["snippet"] = _build_search_snippet(content, search)
+            items.append(ArticleSummaryOut(**row))
+    else:
+        rows = await (
+            query.order_by(*_article_order())
+            .offset(offset)
+            .limit(page_size)
+            .values(*ARTICLE_SUMMARY_FIELDS)
+        )
+        items = [ArticleSummaryOut(**row) for row in rows]
+
+    return ArticleListOut(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        has_more=offset + len(items) < total,
+    )
 
 
 @app.get("/api/articles/all", response_model=List[ArticleSummaryOut])
@@ -284,7 +340,7 @@ async def get_article_by_title(
     if not article.is_published and current_user is None:
         raise HTTPException(status_code=404, detail="文章不存在")
 
-    if article.is_published and current_user is None:
+    if article.is_published:
         article.views += 1
         await article.save(update_fields=["views"])
 
@@ -305,7 +361,7 @@ async def get_article(
     if not article.is_published and current_user is None:
         raise HTTPException(status_code=404, detail="文章不存在")
 
-    if article.is_published and current_user is None:
+    if article.is_published:
         article.views += 1
         await article.save(update_fields=["views"])
 
@@ -314,9 +370,22 @@ async def get_article(
 
 @app.post("/api/articles", response_model=ArticleOut, status_code=201)
 async def create_article(data: ArticleCreate, current_user: User = Depends(get_current_user)):
-    """创建文章；标题唯一，已存在则更新该文章"""
+    """创建文章；标题唯一，已存在则返回 409"""
     title = data.title.strip()
-    return await _upsert_article_by_title(title, data, current_user)
+    if await title_taken(title):
+        raise HTTPException(status_code=409, detail="标题已存在")
+
+    try:
+        return await Article.create(
+            author=current_user,
+            title=title,
+            content=data.content,
+            topic=data.topic,
+            is_published=data.is_published,
+            is_pinned=data.is_pinned,
+        )
+    except IntegrityError:
+        raise HTTPException(status_code=409, detail="标题已存在")
 
 
 @app.put("/api/articles/{article_id}", response_model=ArticleOut)
@@ -358,15 +427,16 @@ async def delete_article(article_id: str, current_user: User = Depends(get_curre
     return {"message": "文章已删除"}
 
 
-@app.get("/api/topics")
+@app.get("/api/topics", response_model=List[TopicOut])
 async def list_topics():
-    """获取所有话题（去重）"""
+    """获取所有话题及已发布文章数量"""
     articles = await Article.filter(is_published=True).values_list("topic", flat=True)
-    topics = set()
+    counts: dict[str, int] = {}
     for t in articles:
         if t and t.strip():
-            topics.add(t.strip())
-    return sorted(topics)
+            name = t.strip()
+            counts[name] = counts.get(name, 0) + 1
+    return [TopicOut(name=name, count=count) for name, count in sorted(counts.items())]
 
 
 @app.get("/api/health")

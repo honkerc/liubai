@@ -53,18 +53,12 @@ export default {
             this.loading = true
             this.error = false
             try {
-                const [topicNames, data] = await Promise.all([
-                    articleApi.topics(),
-                    articleApi.list({ page: 1, page_size: 100 }),
-                ])
-                const list = data.items || data
-                const counts = {}
-                for (const a of list) {
-                    const t = (a.topic || '').trim()
-                    if (t) counts[t] = (counts[t] || 0) + 1
-                }
-                this.topics = topicNames
-                    .map(name => ({ name, count: counts[name] || 0 }))
+                const topicData = await articleApi.topics()
+                this.topics = (topicData || [])
+                    .map((item) => ({
+                        name: item.name,
+                        count: item.count ?? 0,
+                    }))
                     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'))
             } catch (e) {
                 console.error('Failed to load topics:', e)
@@ -79,6 +73,10 @@ export default {
 </script>
 
 <style scoped>
+.topics-page {
+    max-width: 720px;
+}
+
 .main-header {
     margin-bottom: 24px;
     padding-bottom: 20px;
@@ -94,40 +92,41 @@ export default {
 
 .page-desc {
     font-size: 14px;
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     margin: 0;
 }
 
 .topics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
 }
 
 .topic-card {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 14px;
-    text-decoration: none;
-    border: 1px solid var(--border-color);
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
     border-radius: 8px;
-    transition: border-color 0.15s, background 0.15s;
+    border: 1px solid var(--border-color);
+    background: var(--bg-white);
+    text-decoration: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .topic-card:hover {
     border-color: var(--primary);
-    background: var(--bg-hover);
+    box-shadow: 0 2px 8px rgba(79, 110, 247, 0.08);
 }
 
 .topic-name {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
 .topic-count {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-tertiary);
 }
 </style>

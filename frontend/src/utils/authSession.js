@@ -5,8 +5,6 @@ const TOKEN_KEY = 'token'
 const REFRESH_BEFORE_MS = 24 * 60 * 60 * 1000
 /** 过期后仍允许续期的宽限（毫秒） */
 const REFRESH_GRACE_MS = 7 * 24 * 60 * 60 * 1000
-/** 401 后延迟跳转登录（毫秒） */
-const EXPIRED_REDIRECT_DELAY_MS = 2500
 
 export const authState = reactive({
     token: readToken(),
@@ -140,22 +138,12 @@ export function handleUnauthorized(options = {}) {
     const path = window.location.pathname
     if (path.startsWith('/login')) return
 
-    const redirect = encodeURIComponent(path + window.location.search)
-    const goLogin = () => {
-        window.location.href = `/login?redirect=${redirect}&expired=1`
-    }
-
     window.dispatchEvent(new CustomEvent('auth-expired'))
 
-    if (options.immediate) {
+    if (options.immediate || options.redirect) {
         if (expiredRedirectTimer) clearTimeout(expiredRedirectTimer)
-        goLogin()
-        return
-    }
-
-    if (expiredRedirectTimer) clearTimeout(expiredRedirectTimer)
-    expiredRedirectTimer = setTimeout(() => {
         expiredRedirectTimer = null
-        goLogin()
-    }, EXPIRED_REDIRECT_DELAY_MS)
+        const redirect = encodeURIComponent(path + window.location.search)
+        window.location.href = `/login?redirect=${redirect}&expired=1`
+    }
 }

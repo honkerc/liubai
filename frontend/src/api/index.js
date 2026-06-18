@@ -1,5 +1,5 @@
-import { articleApi } from './articles'
+import { articleApi, normalizeListResponse, fetchAllPublishedArticles } from './articles'
 import { authApi } from './auth'
 
-export { articleApi, authApi }
-export default { articleApi, authApi }
+export { articleApi, authApi, normalizeListResponse, fetchAllPublishedArticles }
+export default { articleApi, authApi, normalizeListResponse, fetchAllPublishedArticles }

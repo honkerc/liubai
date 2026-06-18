@@ -19,7 +19,7 @@
 
         <p v-if="searched && !loading && !error && keyword.trim()" class="search-meta">
             <template v-if="results.length">
-                {{ resultCount }} 篇结果
+                {{ resultCount }} 篇结果<template v-if="hasMore">（仅显示前 {{ results.length }} 篇）</template>
             </template>
             <template v-else>
                 无结果
@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import { articleApi } from '@/api'
+import { articleApi, normalizeListResponse } from '@/api'
 import { toArticleRoute } from '@/utils/articleRoute'
 import { highlightKeyword, buildSearchSnippet } from '@/utils/searchHighlight'
 import ArticleListItem from '@/components/ArticleListItem.vue'
@@ -72,6 +72,7 @@ export default {
             loading: false,
             searched: false,
             error: false,
+            hasMore: false,
         }
     },
     computed: {
@@ -122,8 +123,10 @@ export default {
             this.searched = true
             this.error = false
             try {
-                const data = await articleApi.list({ search: q })
-                this.results = data.items || data
+                const data = await articleApi.list({ search: q, page_size: 100 })
+                const { items, has_more } = normalizeListResponse(data)
+                this.results = items
+                this.hasMore = has_more
             } catch (e) {
                 console.error('Search failed:', e)
                 this.results = []
@@ -145,9 +148,9 @@ export default {
             return highlightKeyword(title, this.keyword)
         },
         itemSnippet(item) {
-            const snippet = buildSearchSnippet(item.content, this.keyword)
-            if (!snippet) return ''
-            return highlightKeyword(snippet, this.keyword)
+            const raw = item.snippet || buildSearchSnippet(item.content, this.keyword)
+            if (!raw) return ''
+            return highlightKeyword(raw, this.keyword)
         },
     },
 }

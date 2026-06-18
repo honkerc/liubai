@@ -12,7 +12,7 @@ from typing import Optional
 from fastapi import HTTPException, UploadFile
 from PIL import Image, ImageOps
 
-from config import UPLOAD_DIR_MAX_BYTES, UPLOAD_ROOT
+from config import UPLOAD_DIR_MAX_BYTES, UPLOAD_MAX_FILE_BYTES, UPLOAD_ROOT
 IMAGE_ORIGINAL_DIR = UPLOAD_ROOT / "images" / "original"
 IMAGE_COMPRESSED_DIR = UPLOAD_ROOT / "images" / "compressed"
 VIDEO_DIR = UPLOAD_ROOT / "videos"
@@ -73,10 +73,18 @@ def _normalize_ext(filename: Optional[str]) -> str:
 
 async def _read_upload(file: UploadFile) -> bytes:
     chunks = []
+    total = 0
     while True:
         chunk = await file.read(1024 * 1024)
         if not chunk:
             break
+        total += len(chunk)
+        if total > UPLOAD_MAX_FILE_BYTES:
+            limit_mb = UPLOAD_MAX_FILE_BYTES // (1024 * 1024)
+            raise HTTPException(
+                status_code=413,
+                detail=f"文件过大，单文件上限 {limit_mb} MB",
+            )
         chunks.append(chunk)
     return b"".join(chunks)
 

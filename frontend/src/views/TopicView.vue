@@ -4,7 +4,7 @@
             以下是
             <span class="page-list-kw">{{ topicName }}</span>
             相关的文章
-            <span v-if="!loading && !error" class="page-list-muted">（共 <em class="page-list-num">{{ articles.length }}</em> 篇）</span>
+            <span v-if="!loading && !error" class="page-list-muted">（共 <em class="page-list-num">{{ totalCount || articles.length }}</em> 篇<template v-if="hasMore">，仅显示前 {{ articles.length }} 篇</template>）</span>
         </PageListHeader>
 
         <EmptyState
@@ -40,7 +40,7 @@
 </template>
 
 <script>
-import { articleApi } from '@/api'
+import { articleApi, normalizeListResponse } from '@/api'
 import { routeTopicParam, toArticleRoute } from '@/utils/articleRoute'
 import PageListHeader from '@/components/PageListHeader.vue'
 import ArticleListItem from '@/components/ArticleListItem.vue'
@@ -55,7 +55,8 @@ export default {
         return {
             articles: [],
             loading: true,
-            error: false,
+            totalCount: 0,
+            hasMore: false,
         }
     },
     computed: {
@@ -83,8 +84,11 @@ export default {
             this.loading = true
             this.error = false
             try {
-                const data = await articleApi.list({ topic, page: 1, page_size: 50 })
-                this.articles = data.items || data
+                const data = await articleApi.list({ topic, page: 1, page_size: 100 })
+                const { items, total, has_more } = normalizeListResponse(data)
+                this.articles = items
+                this.totalCount = total
+                this.hasMore = has_more
             } catch (e) {
                 console.error('Failed to load topic articles:', e)
                 this.articles = []

@@ -1,5 +1,6 @@
 import { Marked, Renderer } from 'marked'
 import hljs from 'highlight.js'
+import { headingSlug } from '@/utils/extractHeadings'
 
 const renderer = new Renderer()
 renderer.code = function ({ text, lang }) {
@@ -32,8 +33,16 @@ export function parseMarkdown(content) {
     if (!content || !content.trim()) return ''
     try {
         let html = marked.parse(content)
+        const used = {}
         html = html.replace(/<(h[1-6])(.*?)>(.*?)<\/\1>/g, (match, tag, attrs, text) => {
-            const id = text.replace(/<[^>]*>/g, '').toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/(^-|-$)/g, '')
+            const plain = text.replace(/<[^>]*>/g, '')
+            let base = headingSlug(plain) || 'section'
+            let id = base
+            let n = 2
+            while (used[id]) {
+                id = `${base}-${n++}`
+            }
+            used[id] = true
             return `<${tag}${attrs} id="${id}">${text}</${tag}>`
         })
         return html

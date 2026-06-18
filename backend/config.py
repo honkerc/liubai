@@ -74,3 +74,4 @@ CORS_ORIGINS = [
 ]
 
 UPLOAD_DIR_MAX_BYTES = int(os.getenv("UPLOAD_DIR_MAX_BYTES", str(2 * 1024 * 1024 * 1024)))
+UPLOAD_MAX_FILE_BYTES = int(os.getenv("UPLOAD_MAX_FILE_BYTES", str(50 * 1024 * 1024)))

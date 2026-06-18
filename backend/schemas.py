@@ -130,11 +130,39 @@ class ArticleSummaryOut(BaseModel):
 
     updated_at: datetime
 
+    snippet: Optional[str] = None
+
 
 
     class Config:
 
         from_attributes = True
+
+
+
+
+
+class ArticleListOut(BaseModel):
+
+    items: list[ArticleSummaryOut]
+
+    total: int
+
+    page: int
+
+    page_size: int
+
+    has_more: bool
+
+
+
+
+
+class TopicOut(BaseModel):
+
+    name: str
+
+    count: int
 
 
 

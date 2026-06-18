@@ -7,6 +7,10 @@ const DRAFT_KEYS = {
 
 const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
+function hasDraftContent(title, content) {
+    return !!(content?.trim() || title?.trim())
+}
+
 export function hasLocalDraft() {
     try {
         const time = localStorage.getItem(DRAFT_KEYS.time)
@@ -14,7 +18,7 @@ export function hasLocalDraft() {
         if (Date.now() - parseInt(time, 10) > DRAFT_MAX_AGE_MS) return false
         const content = localStorage.getItem(DRAFT_KEYS.content)
         const title = localStorage.getItem(DRAFT_KEYS.title)
-        return !!(content?.trim() || title?.trim())
+        return hasDraftContent(title, content)
     } catch {
         return false
     }
@@ -28,10 +32,11 @@ export function readLocalDraft() {
             clearLocalDraft()
             return null
         }
-        const content = localStorage.getItem(DRAFT_KEYS.content)
-        if (!content) return null
+        const title = localStorage.getItem(DRAFT_KEYS.title) || ''
+        const content = localStorage.getItem(DRAFT_KEYS.content) || ''
+        if (!hasDraftContent(title, content)) return null
         return {
-            title: localStorage.getItem(DRAFT_KEYS.title) || '',
+            title,
             topic: localStorage.getItem(DRAFT_KEYS.topic) || '',
             content,
             savedAt: parseInt(time, 10),

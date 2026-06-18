@@ -21,11 +21,7 @@ function parseErrorResponse(xhr) {
     return xhr.statusText || `HTTP ${xhr.status}`
 }
 
-/**
- * 带进度回调的文件上传（XMLHttpRequest）
- * onProgress({ loaded, total, percent }) — percent 为 -1 表示总大小未知
- */
-export function uploadWithProgress(file, onProgress) {
+function sendUploadRequest(file, onProgress) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         const form = new FormData()
@@ -47,17 +43,7 @@ export function uploadWithProgress(file, onProgress) {
             }
         })
 
-        xhr.addEventListener('load', async () => {
-            if (xhr.status === 401) {
-                const ok = await tryRefreshSession()
-                if (!ok) {
-                    handleUnauthorized()
-                    reject(new Error('登录已过期，请重新登录'))
-                } else {
-                    reject(new Error('登录已刷新，请重试上传'))
-                }
-                return
-            }
+        xhr.addEventListener('load', () => {
             if (xhr.status >= 200 && xhr.status < 300) {
                 try {
                     resolve(JSON.parse(xhr.responseText))
@@ -66,7 +52,7 @@ export function uploadWithProgress(file, onProgress) {
                 }
                 return
             }
-            reject(new Error(parseErrorResponse(xhr)))
+            reject({ status: xhr.status, message: parseErrorResponse(xhr) })
         })
 
         xhr.addEventListener('error', () => reject(new Error('网络错误，上传失败')))
@@ -79,6 +65,26 @@ export function uploadWithProgress(file, onProgress) {
         }
         xhr.send(form)
     })
+}
+
+/**
+ * 带进度回调的文件上传（XMLHttpRequest）
+ * onProgress({ loaded, total, percent }) — percent 为 -1 表示总大小未知
+ */
+export async function uploadWithProgress(file, onProgress) {
+    try {
+        return await sendUploadRequest(file, onProgress)
+    } catch (err) {
+        if (err?.status === 401) {
+            const ok = await tryRefreshSession()
+            if (!ok) {
+                handleUnauthorized()
+                throw new Error('登录已过期，请重新登录')
+            }
+            return sendUploadRequest(file, onProgress)
+        }
+        throw new Error(err?.message || err || '上传失败')
+    }
 }
 
 export const uploadApi = {

@@ -235,7 +235,7 @@ import ErrorState from '@/components/state/ErrorState.vue'
 import SkeletonSidebarList from '@/components/state/SkeletonSidebarList.vue'
 import SkeletonArticleToc from '@/components/state/SkeletonArticleToc.vue'
 import ArticleToc from '@/components/ArticleToc.vue'
-import { articleApi } from '@/api'
+import { articleApi, fetchAllPublishedArticles } from '@/api'
 import { routeTitleParam, toArticleRoute, toNewArticleRoute, isNewArticleRoute } from '@/utils/articleRoute'
 import {
     clearEditorState,
@@ -425,10 +425,12 @@ export default {
 
             this._loadInFlight = (async () => {
                 try {
-                    const data = this.isLoggedIn
-                        ? await articleApi.listAll()
-                        : await articleApi.list({ page: 1, page_size: 50 })
-                    this.articles = data.items || data
+                    if (this.isLoggedIn) {
+                        const data = await articleApi.listAll()
+                        this.articles = data.items || data
+                    } else {
+                        this.articles = await fetchAllPublishedArticles()
+                    }
                     this.loaded = true
                     this.authMode = authMode
                 } catch (e) {
@@ -573,6 +575,13 @@ export default {
         },
         scrollToHeading(id) {
             if (!id) return
+            if (editorState.inEditor && !scrollToArticleHeading(id)) {
+                window.dispatchEvent(new CustomEvent('article-toc-navigate', { detail: { id } }))
+                if (window.matchMedia('(max-width: 768px)').matches) {
+                    this.$emit('close')
+                }
+                return
+            }
             if (scrollToArticleHeading(id)) {
                 setActiveHeading(id)
             }

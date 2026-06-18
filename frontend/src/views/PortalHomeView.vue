@@ -49,7 +49,7 @@
 </template>
 
 <script>
-import { articleApi } from '@/api'
+import { articleApi, normalizeListResponse } from '@/api'
 import { toArticleRoute, toTopicRoute } from '@/utils/articleRoute'
 import { SITE_TAGLINE } from '@/constants/brand'
 import ArticleListItem from '@/components/ArticleListItem.vue'
@@ -82,12 +82,16 @@ export default {
             this.loading = true
             this.error = false
             try {
-                const [articles, topicNames] = await Promise.all([
+                const [articlesData, topicData] = await Promise.all([
                     articleApi.list({ page: 1, page_size: 12 }),
                     articleApi.topics(),
                 ])
-                this.articles = articles.items || articles
-                this.topics = topicNames.map(name => ({ name }))
+                const { items } = normalizeListResponse(articlesData)
+                this.articles = items
+                this.topics = (topicData || []).map((item) => ({
+                    name: item.name,
+                    count: item.count ?? 0,
+                }))
             } catch (e) {
                 console.error('Failed to load portal home:', e)
                 this.articles = []
