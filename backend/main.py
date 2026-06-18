@@ -24,7 +24,7 @@ from config import (
     STATIC_DIR,
 )
 from models import User, Article
-from schemas import ArticleCreate, ArticleUpdate, ArticleOut, UploadOut
+from schemas import ArticleCreate, ArticleUpdate, ArticleOut, ArticleSummaryOut, UploadOut
 from upload_service import UPLOAD_ROOT, ensure_upload_dirs, save_upload, cleanup_uploads_if_needed
 
 
@@ -215,6 +215,18 @@ def _updated_at_matches(stored, expected) -> bool:
 
 # ===== 文章 API =====
 
+ARTICLE_SUMMARY_FIELDS = (
+    "id",
+    "title",
+    "topic",
+    "is_published",
+    "is_pinned",
+    "views",
+    "created_at",
+    "updated_at",
+)
+
+
 async def title_taken(title: str, exclude_id=None) -> bool:
     query = Article.filter(title=title.strip())
     if exclude_id is not None:
@@ -222,14 +234,14 @@ async def title_taken(title: str, exclude_id=None) -> bool:
     return await query.exists()
 
 
-@app.get("/api/articles", response_model=List[ArticleOut])
+@app.get("/api/articles", response_model=List[ArticleSummaryOut])
 async def list_articles(
     search: Optional[str] = Query(None, description="搜索标题和内容"),
     topic: Optional[str] = Query(None, description="按话题筛选"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
-    """公开接口：获取已发布的文章列表"""
+    """公开接口：获取已发布的文章列表（不含正文）"""
     query = Article.filter(is_published=True)
 
     if search:
@@ -244,17 +256,18 @@ async def list_articles(
         query.order_by(*_article_order())
         .offset((page - 1) * page_size)
         .limit(page_size)
+        .values(*ARTICLE_SUMMARY_FIELDS)
     )
 
     return articles
 
 
-@app.get("/api/articles/all", response_model=List[ArticleOut])
+@app.get("/api/articles/all", response_model=List[ArticleSummaryOut])
 async def list_all_articles(
     current_user: User = Depends(get_current_user),
 ):
-    """管理接口：获取所有文章（包括草稿）"""
-    articles = await Article.all().order_by(*_article_order())
+    """管理接口：获取所有文章摘要（包括草稿，不含正文）"""
+    articles = await Article.all().order_by(*_article_order()).values(*ARTICLE_SUMMARY_FIELDS)
     return articles
 
 

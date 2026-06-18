@@ -16,6 +16,23 @@
                     </svg>
                 </button>
                 <button
+                    v-if="showReturnToToc"
+                    type="button"
+                    class="app-sidebar-icon-btn"
+                    title="返回目录"
+                    @click="returnToArticleToc"
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
+                <button
                     v-if="showArticleToc"
                     type="button"
                     class="app-sidebar-icon-btn"
@@ -132,8 +149,9 @@
             </div>
         </div>
         <div class="app-sidebar-list">
+            <SkeletonArticleToc v-if="showArticleToc && articleViewState.tocLoading" />
             <ArticleToc
-                v-if="showArticleToc"
+                v-else-if="showArticleToc"
                 :headings="articleViewState.headings"
                 :active-id="articleViewState.activeHeadingId"
                 @select="scrollToHeading"
@@ -220,6 +238,7 @@
 import EmptyState from '@/components/state/EmptyState.vue'
 import ErrorState from '@/components/state/ErrorState.vue'
 import SkeletonSidebarList from '@/components/state/SkeletonSidebarList.vue'
+import SkeletonArticleToc from '@/components/state/SkeletonArticleToc.vue'
 import ArticleToc from '@/components/ArticleToc.vue'
 import { articleApi } from '@/api'
 import { routeTitleParam, toArticleRoute, toNewArticleRoute, isNewArticleRoute } from '@/utils/articleRoute'
@@ -237,7 +256,7 @@ import SiteBrandLink from '@/components/SiteBrandLink.vue'
 
 export default {
     name: 'AppSidebar',
-    components: { EmptyState, ErrorState, SkeletonSidebarList, ArticleToc, SiteBrandLink },
+    components: { EmptyState, ErrorState, SkeletonSidebarList, SkeletonArticleToc, ArticleToc, SiteBrandLink },
     directives: {
         clickOutside: {
             mounted(el, binding) {
@@ -275,6 +294,13 @@ export default {
                 this.$route.name === 'public-article'
                 && !editorState.inEditor
                 && !articleViewState.tocSuppressed
+            )
+        },
+        showReturnToToc() {
+            return (
+                this.$route.name === 'public-article'
+                && !editorState.inEditor
+                && articleViewState.tocSuppressed
             )
         },
         isLoggedIn() {
@@ -531,6 +557,9 @@ export default {
         },
         goArticleList() {
             hideArticleToc()
+        },
+        returnToArticleToc() {
+            showArticleTocMode()
         },
         bindHeadingObserver() {
             this.unbindHeadingObserver()

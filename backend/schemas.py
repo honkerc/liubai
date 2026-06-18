@@ -112,6 +112,34 @@ class ArticleOut(BaseModel):
 
 
 
+class ArticleSummaryOut(BaseModel):
+
+    id: uuid.UUID
+
+    title: str
+
+    topic: str
+
+    is_published: bool
+
+    is_pinned: bool
+
+    views: int
+
+    created_at: datetime
+
+    updated_at: datetime
+
+
+
+    class Config:
+
+        from_attributes = True
+
+
+
+
+
 class Token(BaseModel):
 
     access_token: str

@@ -606,6 +606,7 @@ export default {
                 this.article = null
                 this.loadError = 'notfound'
                 this.loading = false
+                clearArticleView()
                 return
             }
 
