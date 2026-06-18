@@ -472,6 +472,10 @@ export default {
                 this.$emit('close')
                 return
             }
+            if (routeTitleParam(this.$route) === a.title) {
+                this.$emit('close')
+                return
+            }
             this.activeTitle = a.title
             this.$router.push(toArticleRoute(a.title))
             this.$emit('close')

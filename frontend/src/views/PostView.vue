@@ -44,7 +44,7 @@
             <!-- 登录用户：直接编辑 -->
             <template v-else-if="isEditablePage">
                 <div class="detail-container detail-container--edit">
-                    <article class="detail-article">
+                    <article :key="articleId || routeArticleTitle" class="detail-article">
                         <div class="detail-header">
                             <h1
                                 ref="titleEl"
@@ -317,6 +317,7 @@ export default {
             saveSavedFlashTimer: null,
             _routeLoadSeq: 0,
             _autoSaveSeq: 0,
+            _loadedRouteTitle: '',
         }
     },
     computed: {
@@ -389,8 +390,19 @@ export default {
         articleMatchesRoute() {
             if (this.$route.name !== 'public-article') return true
             if (!this.article) return false
-            return this.article.title === this.routeArticleTitle
+            const routeTitle = this.routeArticleTitle
+            return this.article.title === routeTitle || this._loadedRouteTitle === routeTitle
         },
+    },
+    beforeRouteUpdate(to, from, next) {
+        next()
+        if (to.name === 'public-article' && from.name === 'public-article') {
+            const toTitle = routeTitleParam(to)
+            const fromTitle = routeTitleParam(from)
+            if (toTitle && toTitle !== fromTitle) {
+                this.loadArticleForRoute(toTitle)
+            }
+        }
     },
     async mounted() {
         this._onResize = () => {
@@ -422,11 +434,15 @@ export default {
     },
     watch: {
         '$route'(to, from) {
-            if (from.name === 'public-article' && to.name !== 'public-article') {
+            if (from?.name === 'public-article' && to.name !== 'public-article') {
                 clearArticleView()
+                this._loadedRouteTitle = ''
             }
-            if (isNewArticleRoute(to) && to.query.fresh && to.query.fresh !== from.query?.fresh) {
+            if (isNewArticleRoute(to) && to.query.fresh && to.query.fresh !== from?.query?.fresh) {
                 this.resetNewArticle()
+                return
+            }
+            if (to.name === 'public-article' && from?.name === 'public-article') {
                 return
             }
             this.initFromRoute()
@@ -577,14 +593,19 @@ export default {
             const text = el.textContent.replace(/\n/g, '').slice(0, 200)
             this.title = text
         },
-        prepareArticleSwitch() {
+        prepareArticleSwitch(nextTitle) {
             if (this.saveTimer) {
                 clearTimeout(this.saveTimer)
                 this.saveTimer = null
             }
             this.activeEditField = null
 
-            if (!this.isLoggedIn || !this.articleId) {
+            if (!this.isLoggedIn || !this.articleId || !this.article) {
+                this._autoSaveSeq += 1
+                return
+            }
+
+            if (this.article.title === nextTitle) {
                 this._autoSaveSeq += 1
                 return
             }
@@ -595,14 +616,13 @@ export default {
             }
 
             const leavingArticleId = this.articleId
-            const leavingRouteTitle = routeTitleParam(this.$route)
             const payload = this.buildSavePayload({}, { force: false })
             const saveSeq = ++this._autoSaveSeq
 
             articleApi.update(leavingArticleId, payload)
                 .then(() => {
                     if (saveSeq !== this._autoSaveSeq) return
-                    if (leavingRouteTitle !== routeTitleParam(this.$route)) return
+                    if (routeTitleParam(this.$route) !== nextTitle) return
                     notifySidebarRefresh()
                 })
                 .catch((err) => {
@@ -667,28 +687,33 @@ export default {
 
             if (this.$route.name !== 'public-article') return
 
+            const title = routeTitleParam(this.$route)
+            await this.loadArticleForRoute(title)
+        },
+        async loadArticleForRoute(title) {
+            if (!title) {
+                this.loadError = 'notfound'
+                this.loading = false
+                this._loadedRouteTitle = ''
+                clearArticleView()
+                return
+            }
+
+            if (!this.loading && this._loadedRouteTitle === title && this.article) {
+                return
+            }
+
             this.captureActiveFieldValues()
             this.activeEditField = null
 
             const loadSeq = ++this._routeLoadSeq
-            const title = routeTitleParam(this.$route)
 
-            if (!this.loading && this.article?.title === title && this.articleMatchesRoute) {
-                return
-            }
-
-            this.prepareArticleSwitch()
+            this.prepareArticleSwitch(title)
             resetArticleHeadings()
             this.resetArticleLoadState()
             this.bodyEditMode = false
             this.loading = true
-
-            if (!title) {
-                this.loadError = 'notfound'
-                this.loading = false
-                clearArticleView()
-                return
-            }
+            this.loadError = null
 
             try {
                 const data = await articleApi.getByTitle(title)
@@ -696,6 +721,7 @@ export default {
                 if (routeTitleParam(this.$route) !== title) return
 
                 this.article = data
+                this._loadedRouteTitle = title
                 if (this.isLoggedIn) {
                     this.syncFormFromArticle(data)
                 }
@@ -704,6 +730,7 @@ export default {
                 if (loadSeq !== this._routeLoadSeq) return
                 console.error('Failed to fetch article:', e)
                 this.article = null
+                this._loadedRouteTitle = ''
                 this.loadError = classifyLoadError(e)
                 clearArticleView()
             } finally {
@@ -714,6 +741,7 @@ export default {
                         this.$nextTick(() => {
                             this.updateTitleDisplay()
                             if (this.bodyEditMode) this.syncTextareaHeight()
+                            this.enhanceVideos()
                         })
                     }
                 }
@@ -733,6 +761,7 @@ export default {
             })
         },
         retryLoadArticle() {
+            this._loadedRouteTitle = ''
             this.initFromRoute()
         },
         loadDraft() {
