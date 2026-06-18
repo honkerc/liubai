@@ -19,24 +19,19 @@
                     v-if="showReturnToToc"
                     type="button"
                     class="app-sidebar-icon-btn"
-                    title="返回目录"
+                    title="文章目录"
                     @click="returnToArticleToc"
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="8" y1="6" x2="21" y2="6"></line>
-                        <line x1="8" y1="12" x2="21" y2="12"></line>
-                        <line x1="8" y1="18" x2="21" y2="18"></line>
-                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        <polyline points="9 18 15 12 9 6"></polyline>
                     </svg>
                 </button>
                 <button
                     v-if="showArticleToc"
                     type="button"
                     class="app-sidebar-icon-btn"
-                    title="返回文章列表"
+                    title="文章列表"
                     @click="goArticleList"
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -292,14 +287,12 @@ export default {
         showArticleToc() {
             return (
                 this.$route.name === 'public-article'
-                && !editorState.inEditor
                 && !articleViewState.tocSuppressed
             )
         },
         showReturnToToc() {
             return (
                 this.$route.name === 'public-article'
-                && !editorState.inEditor
                 && articleViewState.tocSuppressed
             )
         },
