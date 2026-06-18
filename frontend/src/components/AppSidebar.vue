@@ -348,7 +348,8 @@ export default {
             if (to.name === 'public-article') {
                 const toTitle = routeTitleParam(to)
                 const fromTitle = from ? routeTitleParam(from) : null
-                if (toTitle !== fromTitle) {
+                // 仅从非文章页进入时默认展示目录；文章间切换保留列表/目录状态
+                if (toTitle !== fromTitle && from?.name !== 'public-article') {
                     showArticleTocMode()
                 }
             }
