@@ -39,8 +39,10 @@
         </div>
 
         <div ref="detailWrapper" class="detail-wrapper page">
+            <SkeletonArticleDetail v-if="showArticleDetailLoading" />
+
             <!-- 登录用户：直接编辑 -->
-            <template v-if="isEditablePage">
+            <template v-else-if="isEditablePage">
                 <div class="detail-container detail-container--edit">
                     <article class="detail-article">
                         <div class="detail-header">
@@ -116,8 +118,7 @@
 
             <!-- 未登录：只读详情 -->
             <template v-else>
-                <SkeletonArticleDetail v-if="loading" />
-                <div class="detail-container" v-else-if="article">
+                <div class="detail-container" v-if="article">
                     <article class="detail-article">
                         <div class="detail-header">
                             <h1 class="detail-title">{{ article.title }}</h1>
@@ -315,6 +316,7 @@ export default {
             saveSavedFlash: false,
             saveSavedFlashTimer: null,
             _routeLoadSeq: 0,
+            _autoSaveSeq: 0,
         }
     },
     computed: {
@@ -331,6 +333,9 @@ export default {
         },
         showBottomBar() {
             return this.isEditablePage
+        },
+        showArticleDetailLoading() {
+            return this.$route.name === 'public-article' && this.loading
         },
         isPublished() {
             return this.article?.is_published ?? false
@@ -414,10 +419,12 @@ export default {
         this.clearSaveSavedFlash()
         if (this.isEditablePage) this.autoSave()
         clearEditorState()
-        clearArticleView()
     },
     watch: {
         '$route'(to, from) {
+            if (from.name === 'public-article' && to.name !== 'public-article') {
+                clearArticleView()
+            }
             if (isNewArticleRoute(to) && to.query.fresh && to.query.fresh !== from.query?.fresh) {
                 this.resetNewArticle()
                 return
@@ -489,12 +496,16 @@ export default {
             }
             return payload
         },
-        applySaveResult(res) {
-            if (res) {
-                this.article = res
-                this.articleId = res.id
-                if (res.updated_at) this.lastKnownUpdatedAt = res.updated_at
+        applySaveResult(res, saveCtx = null) {
+            if (!res) return
+            if (saveCtx) {
+                if (saveCtx.seq !== this._autoSaveSeq) return
+                if (saveCtx.articleId && this.articleId !== saveCtx.articleId) return
+                if (saveCtx.routeTitle !== routeTitleParam(this.$route)) return
             }
+            this.article = res
+            this.articleId = res.id
+            if (res.updated_at) this.lastKnownUpdatedAt = res.updated_at
         },
         isSaveConflictError(err) {
             const msg = err?.message || ''
@@ -559,6 +570,46 @@ export default {
             this.loadError = null
             clearEditorState()
         },
+        captureActiveFieldValues() {
+            if (this.activeEditField !== 'title') return
+            const el = this.$refs.titleEl
+            if (!el) return
+            const text = el.textContent.replace(/\n/g, '').slice(0, 200)
+            this.title = text
+        },
+        prepareArticleSwitch() {
+            if (this.saveTimer) {
+                clearTimeout(this.saveTimer)
+                this.saveTimer = null
+            }
+            this.activeEditField = null
+
+            if (!this.isLoggedIn || !this.articleId) {
+                this._autoSaveSeq += 1
+                return
+            }
+
+            if (!this.title.trim() && !this.rawContent.trim()) {
+                this._autoSaveSeq += 1
+                return
+            }
+
+            const leavingArticleId = this.articleId
+            const leavingRouteTitle = routeTitleParam(this.$route)
+            const payload = this.buildSavePayload({}, { force: false })
+            const saveSeq = ++this._autoSaveSeq
+
+            articleApi.update(leavingArticleId, payload)
+                .then(() => {
+                    if (saveSeq !== this._autoSaveSeq) return
+                    if (leavingRouteTitle !== routeTitleParam(this.$route)) return
+                    notifySidebarRefresh()
+                })
+                .catch((err) => {
+                    if (saveSeq !== this._autoSaveSeq) return
+                    console.error('Failed to save before article switch:', err)
+                })
+        },
         syncEditorStateToSidebar() {
             if (!this.isEditablePage) {
                 clearEditorState()
@@ -592,9 +643,9 @@ export default {
             })
         },
         async initFromRoute() {
-            this.activeEditField = null
-
             if (this.isNewArticle) {
+                this.activeEditField = null
+
                 if (this.$route.query.fresh) {
                     this.resetNewArticle()
                     return
@@ -616,9 +667,17 @@ export default {
 
             if (this.$route.name !== 'public-article') return
 
+            this.captureActiveFieldValues()
+            this.activeEditField = null
+
             const loadSeq = ++this._routeLoadSeq
             const title = routeTitleParam(this.$route)
 
+            if (!this.loading && this.article?.title === title && this.articleMatchesRoute) {
+                return
+            }
+
+            this.prepareArticleSwitch()
             resetArticleHeadings()
             this.resetArticleLoadState()
             this.bodyEditMode = false
@@ -975,6 +1034,12 @@ export default {
         autoSave(options = {}) {
             if (!this.title.trim() && !this.rawContent.trim()) return
 
+            const saveCtx = {
+                seq: ++this._autoSaveSeq,
+                articleId: this.articleId,
+                routeTitle: routeTitleParam(this.$route),
+            }
+
             this.saving = true
             this.saveStatus = 'saving'
 
@@ -993,18 +1058,23 @@ export default {
             const payload = this.buildSavePayload({}, options)
 
             const done = (res) => {
-                this.applySaveResult(res)
+                if (saveCtx.seq !== this._autoSaveSeq) return
+                if (saveCtx.articleId && this.articleId !== saveCtx.articleId) return
+                if (saveCtx.routeTitle !== routeTitleParam(this.$route)) return
+
+                this.applySaveResult(res, saveCtx)
                 this.saving = false
                 this.saveStatus = 'saved'
                 this.syncEditorStateToSidebar()
                 notifySidebarRefresh()
                 if (options.notify) {
                     this.$toast.success('已保存')
-                } else {
+                } else if (!options.silent) {
                     this.flashSaveSaved()
                 }
             }
             const fail = (err) => {
+                if (saveCtx.seq !== this._autoSaveSeq) return
                 if (this.isSaveConflictError(err)) {
                     this.handleSaveConflict(options, (next) => this.autoSave(next))
                     return
@@ -1013,19 +1083,27 @@ export default {
                 this.saveStatus = 'unsaved'
                 if (options.notify) {
                     this.$toast.error('保存失败')
-                } else {
+                } else if (!options.silent) {
                     this.$toast.error('自动保存失败')
                 }
             }
 
             if (this.articleId) {
                 articleApi.update(this.articleId, payload).then(res => {
-                    if (res?.title) this.syncRouteAfterTitleChange(res.title)
+                    if (saveCtx.seq !== this._autoSaveSeq) return
+                    if (saveCtx.routeTitle !== routeTitleParam(this.$route)) return
+                    if (res?.title && this.articleId === saveCtx.articleId) {
+                        this.syncRouteAfterTitleChange(res.title)
+                    }
                     done(res)
                 }).catch(fail)
             } else {
                 articleApi.create(payload).then(res => {
-                    if (res?.title) this.syncRouteAfterTitleChange(res.title)
+                    if (saveCtx.seq !== this._autoSaveSeq) return
+                    if (saveCtx.routeTitle !== routeTitleParam(this.$route)) return
+                    if (res?.title && this.articleId === saveCtx.articleId) {
+                        this.syncRouteAfterTitleChange(res.title)
+                    }
                     done(res)
                 }).catch(fail)
             }
