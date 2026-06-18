@@ -27,7 +27,7 @@
                 <span class="layout-mobile-bar-spacer" aria-hidden="true"></span>
             </header>
             <div class="layout-right-body">
-                <router-view />
+                <router-view :key="articleRouteKey" />
             </div>
         </main>
 
@@ -67,6 +67,12 @@ export default {
         isEditorRoute() {
             if (this.$route.name === 'new-article') return true
             return this.$route.name === 'public-article' && editorState.inEditor
+        },
+        articleRouteKey() {
+            if (this.$route.name === 'public-article') {
+                return `article-${this.$route.params.title || ''}`
+            }
+            return this.$route.fullPath
         },
     },
     watch: {

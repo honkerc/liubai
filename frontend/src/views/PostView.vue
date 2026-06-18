@@ -116,7 +116,8 @@
 
             <!-- 未登录：只读详情 -->
             <template v-else>
-                <div class="detail-container" v-if="article">
+                <SkeletonArticleDetail v-if="loading" />
+                <div class="detail-container" v-else-if="article">
                     <article class="detail-article">
                         <div class="detail-header">
                             <h1 class="detail-title">{{ article.title }}</h1>
@@ -130,7 +131,6 @@
                         <div class="detail-content markdown-body" v-html="renderedContent"></div>
                     </article>
                 </div>
-                <SkeletonArticleDetail v-else-if="loading" />
                 <EmptyState
                     v-else-if="loadError === 'notfound'"
                     title="文章不存在"
@@ -314,6 +314,7 @@ export default {
             draftCreatedAt: null,
             saveSavedFlash: false,
             saveSavedFlashTimer: null,
+            _routeLoadSeq: 0,
         }
     },
     computed: {
@@ -369,12 +370,21 @@ export default {
             return '上传中…'
         },
         renderedContent() {
-            if (!this.article?.content) return ''
+            if (!this.article || !this.articleMatchesRoute) return ''
+            if (!this.article.content) return ''
             return resolveMarkdownHtml(this.renderMarkdown(this.article.content))
         },
         renderedHtml() {
             if (!this.rawContent.trim()) return ''
             return resolveMarkdownHtml(this.renderMarkdown(this.rawContent))
+        },
+        routeArticleTitle() {
+            return routeTitleParam(this.$route)
+        },
+        articleMatchesRoute() {
+            if (this.$route.name !== 'public-article') return true
+            if (!this.article) return false
+            return this.article.title === this.routeArticleTitle
         },
     },
     async mounted() {
@@ -535,9 +545,19 @@ export default {
             return parseMarkdown(content)
         },
         syncArticleViewFromPost() {
-            if (this.$route.name !== 'public-article' || !this.article) return
+            if (this.$route.name !== 'public-article' || !this.article || !this.articleMatchesRoute) return
             const content = this.isLoggedIn ? this.rawContent : (this.article.content || '')
             syncArticleHeadings(content, this.article.title || this.title)
+        },
+        resetArticleLoadState() {
+            this.article = null
+            this.articleId = null
+            this.title = ''
+            this.topic = ''
+            this.rawContent = ''
+            this.lastKnownUpdatedAt = null
+            this.loadError = null
+            clearEditorState()
         },
         syncEditorStateToSidebar() {
             if (!this.isEditablePage) {
@@ -596,14 +616,15 @@ export default {
 
             if (this.$route.name !== 'public-article') return
 
-            resetArticleHeadings()
-            this.bodyEditMode = false
-            this.loadError = null
-
-            this.loading = true
+            const loadSeq = ++this._routeLoadSeq
             const title = routeTitleParam(this.$route)
+
+            resetArticleHeadings()
+            this.resetArticleLoadState()
+            this.bodyEditMode = false
+            this.loading = true
+
             if (!title) {
-                this.article = null
                 this.loadError = 'notfound'
                 this.loading = false
                 clearArticleView()
@@ -611,24 +632,31 @@ export default {
             }
 
             try {
-                this.article = await articleApi.getByTitle(title)
+                const data = await articleApi.getByTitle(title)
+                if (loadSeq !== this._routeLoadSeq) return
+                if (routeTitleParam(this.$route) !== title) return
+
+                this.article = data
                 if (this.isLoggedIn) {
-                    this.syncFormFromArticle(this.article)
+                    this.syncFormFromArticle(data)
                 }
                 this.syncArticleViewFromPost()
             } catch (e) {
+                if (loadSeq !== this._routeLoadSeq) return
                 console.error('Failed to fetch article:', e)
                 this.article = null
                 this.loadError = classifyLoadError(e)
                 clearArticleView()
             } finally {
-                this.loading = false
-                if (this.isEditablePage) {
-                    this.syncEditorStateToSidebar()
-                    this.$nextTick(() => {
-                        this.updateTitleDisplay()
-                        if (this.bodyEditMode) this.syncTextareaHeight()
-                    })
+                if (loadSeq === this._routeLoadSeq) {
+                    this.loading = false
+                    if (this.isEditablePage) {
+                        this.syncEditorStateToSidebar()
+                        this.$nextTick(() => {
+                            this.updateTitleDisplay()
+                            if (this.bodyEditMode) this.syncTextareaHeight()
+                        })
+                    }
                 }
             }
         },
