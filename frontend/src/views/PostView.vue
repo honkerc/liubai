@@ -481,6 +481,11 @@ export default {
         bodyEditMode(val) {
             if (val) this.syncTextareaHeight()
             this.$nextTick(this.enhanceVideos)
+            if (!val) {
+                this.$nextTick(() => {
+                    window.dispatchEvent(new CustomEvent('article-toc-rebind'))
+                })
+            }
         },
         activeEditField(val, oldVal) {
             if (oldVal === 'title') this.updateTitleDisplay()
@@ -844,6 +849,7 @@ export default {
             const scroll = () => {
                 if (scrollToArticleHeading(id)) {
                     setActiveHeading(id)
+                    window.dispatchEvent(new CustomEvent('article-toc-rebind'))
                 }
             }
             if (this.bodyEditMode) {

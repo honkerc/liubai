@@ -1,7 +1,10 @@
 /** 正文标题距滚动容器顶部的留白（px） */
 export const ARTICLE_HEADING_SCROLL_OFFSET = 72
 
+/** 编辑态正文在 .detail-wrapper 内滚动，只读态在 .layout-right-body */
 export function getArticleScrollRoot() {
+    const editingWrapper = document.querySelector('.post-view--editing .detail-wrapper')
+    if (editingWrapper) return editingWrapper
     return document.querySelector('.layout-right-body')
 }
 

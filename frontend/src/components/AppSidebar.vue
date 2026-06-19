@@ -348,8 +348,8 @@ export default {
             if (to.name === 'public-article') {
                 const toTitle = routeTitleParam(to)
                 const fromTitle = from ? routeTitleParam(from) : null
-                // 仅从非文章页进入时默认展示目录；文章间切换保留列表/目录状态
-                if (toTitle !== fromTitle && from?.name !== 'public-article') {
+                // 进入任意文章（含侧边栏切换、登录态）默认展示目录
+                if (toTitle && toTitle !== fromTitle) {
                     showArticleTocMode()
                 }
             }
@@ -371,14 +371,24 @@ export default {
     mounted() {
         this.loadArticles()
         this.syncActiveTitle()
+        if (this.$route.name === 'public-article') {
+            showArticleTocMode()
+        }
         this._onRefresh = () => this.loadArticles({ force: true, silent: true })
         window.addEventListener('sidebar-articles-refresh', this._onRefresh)
         this._onAuthChanged = () => this.onAuthChange()
         window.addEventListener('auth-changed', this._onAuthChanged)
+        this._onTocRebind = () => {
+            if (this.showArticleToc) {
+                this.$nextTick(() => this.bindHeadingObserver())
+            }
+        }
+        window.addEventListener('article-toc-rebind', this._onTocRebind)
     },
     beforeUnmount() {
         window.removeEventListener('sidebar-articles-refresh', this._onRefresh)
         window.removeEventListener('auth-changed', this._onAuthChanged)
+        window.removeEventListener('article-toc-rebind', this._onTocRebind)
         this.unbindHeadingObserver()
         applyHeadingHighlight('')
     },
@@ -479,6 +489,7 @@ export default {
                 this.$emit('close')
                 return
             }
+            showArticleTocMode()
             this.activeTitle = a.title
             this.$router.push(toArticleRoute(a.title))
             this.$emit('close')
@@ -575,15 +586,10 @@ export default {
         },
         scrollToHeading(id) {
             if (!id) return
-            if (editorState.inEditor && !scrollToArticleHeading(id)) {
-                window.dispatchEvent(new CustomEvent('article-toc-navigate', { detail: { id } }))
-                if (window.matchMedia('(max-width: 768px)').matches) {
-                    this.$emit('close')
-                }
-                return
-            }
             if (scrollToArticleHeading(id)) {
                 setActiveHeading(id)
+            } else if (editorState.inEditor) {
+                window.dispatchEvent(new CustomEvent('article-toc-navigate', { detail: { id } }))
             }
             if (window.matchMedia('(max-width: 768px)').matches) {
                 this.$emit('close')
