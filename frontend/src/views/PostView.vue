@@ -52,7 +52,7 @@
                                 :class="{ 'is-placeholder': !title.trim() && activeEditField !== 'title' }"
                                 :contenteditable="activeEditField === 'title'"
                                 data-placeholder="请输入标题"
-                                @click="onTitleClick"
+                                @dblclick="onTitleClick"
                                 @input="onTitleEditableInput"
                                 @paste="onTitlePaste"
                                 @blur="leaveEdit('title')"
@@ -70,7 +70,7 @@
                                 <span
                                     v-else-if="activeEditField !== 'topic'"
                                     class="detail-topic-placeholder"
-                                    @click="onTopicClick"
+                                    @dblclick.prevent="onTopicClick"
                                 >#添加话题（可选）</span>
                                 <span v-else class="detail-topic-edit">
                                     <span class="detail-topic-hash">#</span>
@@ -109,8 +109,8 @@
                             v-else
                             class="detail-content markdown-body detail-content-preview detail-content-preview--clickable"
                             v-html="renderedHtml || emptyContentHtml"
-                            title="点击正文进入编辑"
-                            @click="onPreviewClick"
+                            title="双击正文进入编辑"
+                            @dblclick="onPreviewClick"
                         ></div>
                     </article>
                 </div>
@@ -1395,7 +1395,7 @@ export default {
 }
 
 .detail-content-preview--clickable {
-    cursor: text;
+    cursor: default;
 }
 
 .detail-subtitle {
