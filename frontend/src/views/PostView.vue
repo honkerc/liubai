@@ -109,7 +109,7 @@
                             v-else
                             class="detail-content markdown-body detail-content-preview detail-content-preview--clickable"
                             v-html="renderedHtml || emptyContentHtml"
-                            title="双击正文进入编辑"
+                            title="双击正文进入编辑（定位到当前位置）"
                             @dblclick="onPreviewClick"
                         ></div>
                     </article>
@@ -282,6 +282,11 @@ import { authState, isAuthenticated } from '@/utils/authSession'
 import { buildUploadMarkdown, UPLOAD_ACCEPT } from '@/utils/uploadMarkdown'
 import { enhanceMarkdownVideos } from '@/utils/enhanceMarkdownVideos'
 import { classifyLoadError } from '@/utils/apiError'
+import {
+    getPreviewTextOffset,
+    markdownIndexFromPlainOffset,
+    syncEditorScrollFromPreview,
+} from '@/utils/previewEditSync'
 import SkeletonArticleDetail from '@/components/state/SkeletonArticleDetail.vue'
 import EmptyState from '@/components/state/EmptyState.vue'
 import ErrorState from '@/components/state/ErrorState.vue'
@@ -603,7 +608,7 @@ export default {
         },
         onPreviewClick(e) {
             if (e.target.closest('a')) return
-            this.enterBodyEdit()
+            this.enterBodyEditFromPreview(e.currentTarget, e.clientX, e.clientY)
         },
         onTextareaPaste(e) {
             const items = e.clipboardData?.items
@@ -942,6 +947,28 @@ export default {
             this.$nextTick(() => {
                 this.syncTextareaHeight()
                 this.$refs.textarea?.focus()
+            })
+        },
+        enterBodyEditFromPreview(previewEl, clientX, clientY) {
+            const wrapper = this.$refs.detailWrapper
+            const previewScrollTop = wrapper?.scrollTop ?? 0
+            const plainOffset = getPreviewTextOffset(previewEl, clientX, clientY)
+            const cursor = plainOffset != null
+                ? markdownIndexFromPlainOffset(this.rawContent, plainOffset)
+                : null
+
+            this.bodyEditMode = true
+            this.$nextTick(() => {
+                this.syncTextareaHeight(() => {
+                    const ta = this.getTextarea()
+                    if (!ta) return
+                    syncEditorScrollFromPreview(wrapper, ta, previewScrollTop)
+                    if (cursor != null) {
+                        const pos = Math.min(Math.max(0, cursor), ta.value.length)
+                        ta.setSelectionRange(pos, pos)
+                    }
+                    ta.focus()
+                })
             })
         },
         syncPreviewScrollFromEditor() {
